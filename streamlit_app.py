@@ -58,7 +58,15 @@ def doi2bib(doi):
         formatted_bibtex += f"\t{key} = {{{value}}},\n"
     formatted_bibtex = formatted_bibtex.rstrip(",\n") + "\n}"
 
-    return formatted_bibtex
+    # Extract the citation key
+    cite_key_match = re.search(r"@article{([^,]+),", formatted_bibtex)
+    cite_key = cite_key_match.group(1) if cite_key_match else "unknown"
+
+    return cite_key, formatted_bibtex
+
+def is_valid_doi(doi):
+    """Validate DOI format."""
+    return bool(re.match(r"10.\d{4,9}/[-._;()/:A-Z0-9]+", doi, re.IGNORECASE))
 
 
 # Streamlit interface
@@ -116,18 +124,23 @@ st.markdown(
 
 st.title("DOI to BibTeX Converter")
 doi_input = st.text_input("Enter DOIs (separated by commas)", value="10.1000/xyz123")
+doi_list = [doi.strip() for doi in doi_input.split(",") if is_valid_doi(doi.strip())]
 
 if st.button("Convert DOIs to BibTeX"):
-    dois = [d.strip() for d in doi_input.split(",")]
+    dois = doi_list #[d.strip() for d in doi_input.split(",")]
+    cite_keys = []
     bibtex_result = ""
     for doi in dois:
-        bibtex = doi2bib(doi)
+        cite_key, bibtex = doi2bib(doi)
         if "DOI not found" not in bibtex and "Service unavailable" not in bibtex:
             bibtex_result += bibtex + "\n\n"
         else:
             bibtex_result += bibtex + "\n"
+            cite_keys.append(cite_key)
+
 
     if bibtex_result:
         bibtex_formatted = st.code(bibtex_result, language="plaintext")
     else:
         st.write("No valid DOIs found.")
+
