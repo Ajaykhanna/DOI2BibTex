@@ -58,10 +58,6 @@ def doi2bib(doi):
         formatted_bibtex += f"\t{key} = {{{value}}},\n"
     formatted_bibtex = formatted_bibtex.rstrip(",\n") + "\n}"
 
-    # Extract the citation key
-    cite_key_match = re.search(r"@article{([^,]+),", formatted_bibtex)
-    cite_key = cite_key_match.group(1) if cite_key_match else "unknown"
-
     return cite_key, formatted_bibtex
 
 def is_valid_doi(doi):
