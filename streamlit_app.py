@@ -16,9 +16,6 @@ import streamlit as st
 import requests
 import re
 
-BASE_URL = "http://dx.doi.org/"
-
-
 def doi2bib(doi):
     """
     Converts a DOI (Digital Object Identifier) to a BibTeX entry and formats it.
@@ -29,7 +26,7 @@ def doi2bib(doi):
     Returns:
         str: The formatted BibTeX entry, or an error message if the DOI is not found or the service is unavailable.
     """
-
+    BASE_URL = "http://dx.doi.org/"
     url = BASE_URL + doi
     headers = {"Accept": "application/x-bibtex"}
     response = requests.get(url, headers=headers)
@@ -47,9 +44,11 @@ def doi2bib(doi):
     # Reformat BibTeX output to place each field on a new line, with title and author first
     fields = re.findall(r"(\w+)\s*=\s*\{([^}]*)\}", bibtex)
     fields_dict = dict(fields)
+    
     # Ordering fields with title and author immediately after the citekey
     ordered_keys = ["title", "author"]
     ordered_fields = [(k, fields_dict[k]) for k in ordered_keys if k in fields_dict]
+    
     # Include other fields in the original order excluding title and author
     other_fields = [(k, v) for k, v in fields if k not in ordered_keys]
 
@@ -64,6 +63,10 @@ def is_valid_doi(doi):
     """Validate DOI format."""
     return bool(re.match(r"10.\d{4,9}/[-._;()/:A-Z0-9]+", doi, re.IGNORECASE))
 
+def extract_year(bibtex):
+    """Extract the year from a BibTeX entry."""
+    match = re.search(r"year\\s*=\\s*{(\\d{4})}", bibtex)
+    return int(match.group(1)) if match else 0  # Return 0 if no year is found
 
 # Streamlit interface
 st.set_page_config(
@@ -123,7 +126,7 @@ doi_input = st.text_input("Enter DOIs (separated by commas)", value="10.1000/xyz
 doi_list = [doi.strip() for doi in doi_input.split(",") if is_valid_doi(doi.strip())]
 
 if st.button("Convert DOIs to BibTeX"):
-    dois = doi_list #[d.strip() for d in doi_input.split(",")]
+    dois = doi_list
     cite_keys = []
     bibtex_result = ""
     for doi in dois:
@@ -137,6 +140,7 @@ if st.button("Convert DOIs to BibTeX"):
 
     if bibtex_result:
         bibtex_formatted = st.code(bibtex_result, language="plaintext")
+    
     else:
         st.write("No valid DOIs found.")
 
