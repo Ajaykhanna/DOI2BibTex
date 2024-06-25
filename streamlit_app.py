@@ -153,7 +153,7 @@ if st.session_state.bibtex_entries:
 
     # Display cite keys
     st.subheader("Cite Keys")
-    cite_keys_list = "\n".join([entry[0] for entry in st.session_state.bibtex_entries])
+    cite_keys_list = ",".join([entry[0] for entry in st.session_state.bibtex_entries])
     st.code(cite_keys_list, language="plaintext")
 
     # Add a button to sort by year
@@ -167,7 +167,7 @@ if st.session_state.bibtex_entries:
 
         # Display sorted cite keys
         st.subheader("Cite Keys (Sorted by Year)")
-        sorted_cite_keys_list = "\n".join([entry[0] for entry in sorted_entries])
+        sorted_cite_keys_list = ",".join([entry[0] for entry in sorted_entries])
         st.code(sorted_cite_keys_list, language="plaintext")
 
 else:
