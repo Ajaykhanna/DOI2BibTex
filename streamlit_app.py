@@ -15,8 +15,10 @@
 import streamlit as st
 import requests
 import re
+from typing import List, Tuple
 
-def doi2bib(doi):
+
+def doi2bib(doi: str) -> Tuple[str, str]:
     """
     Converts a DOI (Digital Object Identifier) to a BibTeX entry and formats it.
 
@@ -24,16 +26,17 @@ def doi2bib(doi):
         doi (str): The DOI to be converted to a BibTeX entry.
 
     Returns:
-        str: The formatted BibTeX entry, or an error message if the DOI is not found or the service is unavailable.
+        Tuple[str, str]: A tuple containing the citation key and the formatted BibTeX entry,
+        or an error message if the DOI is not found or the service is unavailable.
     """
     BASE_URL = "http://dx.doi.org/"
     url = BASE_URL + doi
     headers = {"Accept": "application/x-bibtex"}
     response = requests.get(url, headers=headers)
     if response.status_code == 404:
-        return "DOI not found."
+        return "unknown", "DOI not found."
     elif response.status_code != 200:
-        return "Service unavailable."
+        return "unknown", "Service unavailable."
 
     bibtex = response.content.decode()
 
@@ -44,11 +47,11 @@ def doi2bib(doi):
     # Reformat BibTeX output to place each field on a new line, with title and author first
     fields = re.findall(r"(\w+)\s*=\s*\{([^}]*)\}", bibtex)
     fields_dict = dict(fields)
-    
+
     # Ordering fields with title and author immediately after the citekey
     ordered_keys = ["title", "author"]
     ordered_fields = [(k, fields_dict[k]) for k in ordered_keys if k in fields_dict]
-    
+
     # Include other fields in the original order excluding title and author
     other_fields = [(k, v) for k, v in fields if k not in ordered_keys]
 
@@ -59,14 +62,17 @@ def doi2bib(doi):
 
     return cite_key, formatted_bibtex
 
-def is_valid_doi(doi):
+
+def is_valid_doi(doi: str) -> bool:
     """Validate DOI format."""
     return bool(re.match(r"10.\d{4,9}/[-._;()/:A-Z0-9]+", doi, re.IGNORECASE))
 
-def extract_year(bibtex):
+
+def extract_year(bibtex: str) -> int:
     """Extract the year from a BibTeX entry."""
-    match = re.search(r"year\\s*=\\s*{(\\d{4})}", bibtex)
+    match = re.search(r"year\s*=\s*{(\d{4})}", bibtex)
     return int(match.group(1)) if match else 0  # Return 0 if no year is found
+
 
 # Streamlit interface
 st.set_page_config(
@@ -125,22 +131,44 @@ st.title("DOI to BibTeX Converter")
 doi_input = st.text_input("Enter DOIs (separated by commas)", value="10.1000/xyz123")
 doi_list = [doi.strip() for doi in doi_input.split(",") if is_valid_doi(doi.strip())]
 
+if "bibtex_entries" not in st.session_state:
+    st.session_state.bibtex_entries = []
+
 if st.button("Convert DOIs to BibTeX"):
-    dois = doi_list
-    cite_keys = []
-    bibtex_result = ""
-    for doi in dois:
+    st.session_state.bibtex_entries = []
+    for doi in doi_list:
         cite_key, bibtex = doi2bib(doi)
         if "DOI not found" not in bibtex and "Service unavailable" not in bibtex:
-            bibtex_result += bibtex + "\n\n"
+            st.session_state.bibtex_entries.append(
+                (cite_key, bibtex, extract_year(bibtex))
+            )
         else:
-            bibtex_result += bibtex + "\n"
-            cite_keys.append(cite_key)
+            st.write(f"Error for DOI {doi}: {bibtex}")
 
+if st.session_state.bibtex_entries:
+    # Display BibTeX entries in original order
+    bibtex_result = "\n\n".join([entry[1] for entry in st.session_state.bibtex_entries])
+    st.subheader("BibTeX Entries")
+    st.code(bibtex_result, language="plaintext")
 
-    if bibtex_result:
-        bibtex_formatted = st.code(bibtex_result, language="plaintext")
-    
-    else:
-        st.write("No valid DOIs found.")
+    # Display cite keys
+    st.subheader("Cite Keys")
+    cite_keys_list = "\n".join([entry[0] for entry in st.session_state.bibtex_entries])
+    st.code(cite_keys_list, language="plaintext")
 
+    # Add a button to sort by year
+    if st.button("Sort by Year"):
+        sorted_entries = sorted(
+            st.session_state.bibtex_entries, key=lambda x: x[2], reverse=True
+        )
+        sorted_bibtex_result = "\n\n".join([entry[1] for entry in sorted_entries])
+        st.subheader("BibTeX Entries (Sorted by Year)")
+        st.code(sorted_bibtex_result, language="plaintext")
+
+        # Display sorted cite keys
+        st.subheader("Cite Keys (Sorted by Year)")
+        sorted_cite_keys_list = "\n".join([entry[0] for entry in sorted_entries])
+        st.code(sorted_cite_keys_list, language="plaintext")
+
+else:
+    st.write("No valid DOIs found or BibTeX entries not yet generated.")

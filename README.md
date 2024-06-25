@@ -1,18 +1,21 @@
-# DOI2BibTex
 # DOI to BibTeX Converter :books::zap:
+<img alt="Logo" src="logo.png" width=100 height=100 align=right>
 
 Convert Digital Object Identifiers (DOI) into BibTeX entries with a simple, user-friendly web app built using Streamlit! This app is perfect for researchers, academicians, and anyone involved in scholarly writing who needs to quickly convert DOIs to properly formatted BibTeX references.
 
 ## Features :star2:
-
-- **Easy to Use**: Just paste your DOI, and get the BibTeX format instantly.
+- **Live App**: [DOI to BibTeX Converter](https://doi2bibtex.streamlit.app/)
+- **Easy to Use**: Just paste your DOI(s), and get the BibTeX format instantly.
 - **Fast**: Converts DOIs to BibTeX entries in seconds.
 - **User-Friendly Interface**: A clean, straightforward interface ensures you get what you need without any hassle.
 - **Clipboard Copy**: Easily copy the generated BibTeX to your clipboard with one click.
+- **Responsive Design**: Works on all devices, including desktops, tablets, and mobile phones.
 
 ## Getting Started :rocket:
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+Checkout the live version of the app [DOI2BibTex](https://doi2bibtex.streamlit.app/) hosted on streamlit share.
+
+The following instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
 ### Prerequisites
 
@@ -56,5 +59,5 @@ Ajay Khanna
 
 ### Acknowledgments
 ___
-Streamlit Team for their amazing tool that made this app possible.
+Streamlit Team for their amazing tool that made this app possible and letting me host my app on their community share servers.
 All contributors who help keep the project running!
