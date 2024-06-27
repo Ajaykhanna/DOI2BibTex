@@ -146,29 +146,34 @@ if st.button("Convert DOIs to BibTeX"):
             st.write(f"Error for DOI {doi}: {bibtex}")
 
 if st.session_state.bibtex_entries:
-    # Display BibTeX entries in original order
-    bibtex_result = "\n\n".join([entry[1] for entry in st.session_state.bibtex_entries])
-    st.subheader("BibTeX Entries")
-    st.code(bibtex_result, language="plaintext")
-
     # Display cite keys
     st.subheader("Cite Keys")
     cite_keys_list = ",".join([entry[0] for entry in st.session_state.bibtex_entries])
     st.code(cite_keys_list, language="plaintext")
 
+    # Display BibTeX entries in original order
+    bibtex_result = "\n\n".join([entry[1] for entry in st.session_state.bibtex_entries])
+    st.subheader("BibTeX Entries")
+    st.code(bibtex_result, language="plaintext")
+
+
+
     # Add a button to sort by year
     if st.button("Sort by Year"):
         sorted_entries = sorted(
-            st.session_state.bibtex_entries, key=lambda x: x[2], reverse=True
+            st.session_state.bibtex_entries, key=lambda x: x[2], reverse=False
         )
-        sorted_bibtex_result = "\n\n".join([entry[1] for entry in sorted_entries])
-        st.subheader("BibTeX Entries (Sorted by Year)")
-        st.code(sorted_bibtex_result, language="plaintext")
 
         # Display sorted cite keys
         st.subheader("Cite Keys (Sorted by Year)")
         sorted_cite_keys_list = ",".join([entry[0] for entry in sorted_entries])
         st.code(sorted_cite_keys_list, language="plaintext")
+
+        sorted_bibtex_result = "\n\n".join([entry[1] for entry in sorted_entries])
+        st.subheader("BibTeX Entries (Sorted by Year)")
+        st.code(sorted_bibtex_result, language="plaintext")
+
+
 
 else:
     st.write("No valid DOIs found or BibTeX entries not yet generated.")
