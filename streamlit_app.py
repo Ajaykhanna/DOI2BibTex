@@ -17,7 +17,7 @@ import requests
 import re
 from typing import List, Tuple
 
-
+## Required Functions
 def doi2bib(doi: str) -> Tuple[str, str]:
     """
     Converts a DOI (Digital Object Identifier) to a BibTeX entry and formats it.
@@ -156,8 +156,6 @@ if st.session_state.bibtex_entries:
     st.subheader("BibTeX Entries")
     st.code(bibtex_result, language="plaintext")
 
-
-
     # Add a button to sort by year
     if st.button("Sort by Year"):
         sorted_entries = sorted(
@@ -172,8 +170,6 @@ if st.session_state.bibtex_entries:
         sorted_bibtex_result = "\n\n".join([entry[1] for entry in sorted_entries])
         st.subheader("BibTeX Entries (Sorted by Year)")
         st.code(sorted_bibtex_result, language="plaintext")
-
-
 
 else:
     st.write("No valid DOIs found or BibTeX entries not yet generated.")
