@@ -1,8 +1,8 @@
 """
-**Author**: Ajay Khanna  
-**Date**: Dec.10.2023  
-**Place**: UC Merced  
-**Lab**: Dr. Isborn  
+**Author**: Ajay Khanna
+**Date**: Dec.10.2023
+**Place**: UC Merced
+**Lab**: Dr. Isborn
 
 ### 📧 Contact Information
 
@@ -16,6 +16,7 @@ import streamlit as st
 import requests
 import re
 from typing import List, Tuple
+
 
 ## Required Functions
 def doi2bib(doi: str) -> Tuple[str, str]:
