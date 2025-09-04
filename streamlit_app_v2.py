@@ -1,9 +1,9 @@
 """
-Enhanced DOI to BibTeX Converter - NumPy 2.0 Compatible
-**Author**: Ajay Khanna (Enhanced by Claude)
-**Date**: Dec.10.2023 (Enhanced: Sep.03.2025)
-**Place**: UC Merced
-**Lab**: Dr. Isborn
+DOI to BibTeX Converter
+**Author**: Ajay Khanna (Enhanced by Claude + ChatGPT5)
+**Date**: Dec.10.2023 (Enhanced: Sep.04.2025)
+**Place**: LANL
+**Lab**: Dr. Tretiak
 
 ### 📧 Contact Information
 - **Email**: [akhanna2@ucmerced.edu](mailto:akhanna2@ucmerced.edu) / [quantphobia@gmail.com](mailto:quantphobia@gmail.com)
@@ -66,7 +66,7 @@ def safe_request(
 
 
 def validate_doi_format(doi: str) -> bool:
-    """Enhanced DOI format validation"""
+    """DOI format validation"""
     if not doi or not isinstance(doi, str):
         return False
 
@@ -149,7 +149,7 @@ def extract_year(bibtex: str) -> int:
 
 
 def doi_to_bibtex(doi: str) -> Tuple[str, str, Dict[str, Any]]:
-    """Convert DOI to BibTeX with enhanced error handling and metadata"""
+    """Convert DOI to BibTeX with error handling and metadata"""
     result_metadata = {
         "doi": doi,
         "status": "processing",
@@ -498,122 +498,159 @@ def create_download_link(content: str, filename: str, file_type: str) -> str:
 def create_simple_bar_chart(
     data: Dict[str, int], title: str, max_items: int = 10
 ) -> str:
-    """Create simple ASCII bar chart"""
+    """Create simple HTML bar chart without leading indentation so Markdown renders it."""
     if not data:
-        return f"No data available for {title}"
+        return f"<div><h4>{title}</h4><p>No data available</p></div>"
 
-    # Get top items
     sorted_items = sorted(data.items(), key=lambda x: x[1], reverse=True)[:max_items]
     if not sorted_items:
-        return f"No data available for {title}"
+        return f"<div><h4>{title}</h4><p>No data available</p></div>"
 
     max_value = max(count for _, count in sorted_items)
-    chart_width = 50
+    total = sum(data.values()) if data else 0
 
-    chart_html = f"""
-    <div style="font-family: monospace; margin: 20px 0;">
-        <h4>{title}</h4>
-        <div style="border: 1px solid #ccc; padding: 15px; background: #f9f9f9;">
-    """
+    parts = []
+    parts.append('<div style="font-family: monospace; margin: 20px 0;">')
+    parts.append(f"<h4>{title}</h4>")
+    parts.append(
+        '<div style="border: 1px solid #ccc; padding: 15px; background: #f9f9f9;">'
+    )
 
     for item, count in sorted_items:
-        bar_width = int((count / max_value) * chart_width) if max_value > 0 else 0
-        percentage = (count / sum(data.values())) * 100 if sum(data.values()) > 0 else 0
+        bar_width = int((count / max_value) * 50) if max_value > 0 else 0
+        percentage = (count / total) * 100 if total > 0 else 0
+        display_item = (item[:30] + "...") if len(item) > 30 else item
 
-        # Truncate long labels
-        display_item = item[:30] + "..." if len(item) > 30 else item
+        parts.append('<div style="margin: 8px 0; display: flex; align-items: center;">')
+        parts.append(
+            f'<div style="width: 200px; text-align: right; padding-right: 10px; font-size: 12px;">{display_item}:</div>'
+        )
+        parts.append(
+            f'<div style="background: #4CAF50; height: 20px; width: {bar_width * 4}px; margin-right: 10px;"></div>'
+        )
+        parts.append(
+            f'<div style="font-size: 12px; font-weight: bold;">{count} ({percentage:.1f}%)</div>'
+        )
+        parts.append("</div>")
 
-        chart_html += f"""
-            <div style="margin: 8px 0; display: flex; align-items: center;">
-                <div style="width: 200px; text-align: right; padding-right: 10px; font-size: 12px;">
-                    {display_item}:
-                </div>
-                <div style="background: #4CAF50; height: 20px; width: {bar_width * 4}px; margin-right: 10px;"></div>
-                <div style="font-size: 12px; font-weight: bold;">
-                    {count} ({percentage:.1f}%)
-                </div>
-            </div>
-        """
-
-    chart_html += """
-        </div>
-    </div>
-    """
-
-    return chart_html
+    parts.append("</div>")
+    parts.append("</div>")
+    return "".join(parts)
 
 
 def create_timeline_chart(years: List[int]) -> str:
-    """Create simple timeline chart"""
+    """Create simple timeline chart HTML without leading indentation."""
     if not years:
-        return "No year data available"
+        return "<div><h4>Publication Timeline</h4><p>No year data available</p></div>"
 
     year_counts = Counter(years)
     sorted_years = sorted(year_counts.keys())
-
-    chart_html = f"""
-    <div style="font-family: monospace; margin: 20px 0;">
-        <h4>Publication Timeline</h4>
-        <div style="border: 1px solid #ccc; padding: 15px; background: #f9f9f9;">
-            <div style="margin-bottom: 10px;">
-                <strong>Years:</strong> {min(sorted_years)} - {max(sorted_years)} 
-                <strong>Total Publications:</strong> {sum(year_counts.values())}
-            </div>
-    """
-
     max_count = max(year_counts.values())
+
+    parts = []
+    parts.append('<div style="font-family: monospace; margin: 20px 0;">')
+    parts.append("<h4>Publication Timeline</h4>")
+    parts.append(
+        '<div style="border: 1px solid #ccc; padding: 15px; background: #f9f9f9;">'
+    )
+    parts.append(
+        f'<div style="margin-bottom: 10px;"><strong>Years:</strong> {min(sorted_years)} - {max(sorted_years)} '
+        f"<strong>Total Publications:</strong> {sum(year_counts.values())}</div>"
+    )
+
     for year in sorted_years:
         count = year_counts[year]
         bar_width = int((count / max_count) * 30) if max_count > 0 else 0
 
-        chart_html += f"""
-            <div style="margin: 5px 0; display: flex; align-items: center;">
-                <div style="width: 60px; text-align: right; padding-right: 10px; font-size: 12px;">
-                    {year}:
-                </div>
-                <div style="background: #2196F3; height: 15px; width: {bar_width * 8}px; margin-right: 10px;"></div>
-                <div style="font-size: 12px; font-weight: bold;">
-                    {count}
-                </div>
-            </div>
-        """
+        parts.append('<div style="margin: 5px 0; display: flex; align-items: center;">')
+        parts.append(
+            f'<div style="width: 60px; text-align: right; padding-right: 10px; font-size: 12px;">{year}:</div>'
+        )
+        parts.append(
+            f'<div style="background: #2196F3; height: 15px; width: {bar_width * 8}px; margin-right: 10px;"></div>'
+        )
+        parts.append(f'<div style="font-size: 12px; font-weight: bold;">{count}</div>')
+        parts.append("</div>")
 
-    chart_html += """
-        </div>
-    </div>
-    """
-
-    return chart_html
+    parts.append("</div>")
+    parts.append("</div>")
+    return "".join(parts)
 
 
 # ==================== UI COMPONENTS ====================
 
 
-def apply_custom_css():
-    """Apply custom CSS styling"""
+def apply_custom_css(theme: str = "light"):
+    primary = "#4CAF50"
+    secondary = "#2196F3"
+    accent = "#FF9800"
+
+    if theme == "dark":
+        bg = "#1e1e1e"
+        text = "#ffffff"
+        border = "#404040"
+        card_bg = "#2a2a2a"
+        panel_bg = "#2b2b2b"
+        sidebar_bg = "#171717"
+        sidebar_text = "#ffffff"
+        control_bg = "#2a2a2a"
+    else:
+        bg = "#f8f9fa"
+        text = "#333333"
+        border = "#e0e0e0"
+        card_bg = "#ffffff"
+        panel_bg = "#f9f9f9"
+        sidebar_bg = "#ffffff"
+        sidebar_text = "#333333"
+        control_bg = "#ffffff"
+
     st.markdown(
-        """
+        f"""
     <style>
-    /* Main theme variables */
-    :root {
-        --primary-color: #4CAF50;
-        --secondary-color: #2196F3;
-        --accent-color: #FF9800;
-        --background-color: #f8f9fa;
-        --text-color: #333333;
-        --border-color: #e0e0e0;
+    :root {{
+        --primary-color: {primary};
+        --secondary-color: {secondary};
+        --accent-color: {accent};
+        --background-color: {bg};
+        --text-color: {text};
+        --border-color: {border};
+        --card-bg: {card_bg};
+        --panel-bg: {panel_bg};
+        --sidebar-bg: {sidebar_bg};
+        --sidebar-text: {sidebar_text};
+        --control-bg: {control_bg};
         --shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    /* Dark theme */
-    .dark-theme {
-        --background-color: #1e1e1e;
-        --text-color: #ffffff;
-        --border-color: #404040;
-    }
-    
-    /* Custom styling */
-    .main-header {
+    }}
+
+    html, body, .stApp {{
+        background-color: var(--background-color) !important;
+        color: var(--text-color) !important;
+    }}
+
+    h1, h2, h3, h4, h5, h6, p, li, label, span, div {{ color: var(--text-color); }}
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {{
+        background-color: var(--sidebar-bg) !important;
+        color: var(--sidebar-text) !important;
+        border-right: 1px solid var(--border-color) !important;
+    }}
+    section[data-testid="stSidebar"] * {{ color: var(--sidebar-text) !important; }}
+    section[data-testid="stSidebar"] input,
+    section[data-testid="stSidebar"] textarea,
+    section[data-testid="stSidebar"] select,
+    section[data-testid="stSidebar"] div[role="combobox"],
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div {{
+        background-color: var(--control-bg) !important;
+        color: var(--sidebar-text) !important;
+        border: 1px solid var(--border-color) !important;
+    }}
+    section[data-testid="stSidebar"] [data-testid="stMetricLabel"],
+    section[data-testid="stSidebar"] [data-testid="stMetricValue"] {{
+        color: var(--sidebar-text) !important;
+    }}
+
+    .main-header {{
         text-align: center;
         padding: 2rem 0;
         background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
@@ -621,120 +658,62 @@ def apply_custom_css():
         border-radius: 10px;
         margin-bottom: 2rem;
         box-shadow: var(--shadow);
-    }
-    
-    .feature-card {
-        background: white;
+    }}
+
+    .feature-card {{
+        background: var(--card-bg);
         padding: 1.5rem;
         border-radius: 10px;
         box-shadow: var(--shadow);
         margin-bottom: 1rem;
         border-left: 4px solid var(--primary-color);
-    }
-    
-    .metric-card {
+        border: 1px solid var(--border-color);
+    }}
+
+    .metric-card {{
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         padding: 1rem;
         border-radius: 8px;
         text-align: center;
         margin: 0.5rem;
-    }
-    
-    .status-success {
-        background-color: #d4edda;
-        color: #155724;
-        padding: 0.75rem;
-        border-radius: 6px;
-        border: 1px solid #c3e6cb;
-        margin: 1rem 0;
-    }
-    
-    .status-error {
-        background-color: #f8d7da;
-        color: #721c24;
-        padding: 0.75rem;
-        border-radius: 6px;
-        border: 1px solid #f5c6cb;
-        margin: 1rem 0;
-    }
-    
-    .status-warning {
-        background-color: #fff3cd;
-        color: #856404;
-        padding: 0.75rem;
-        border-radius: 6px;
-        border: 1px solid #ffeaa7;
-        margin: 1rem 0;
-    }
-    
-    /* Progress bar */
-    .progress-bar {
-        width: 100%;
-        height: 25px;
-        background-color: #f0f0f0;
-        border-radius: 12px;
-        overflow: hidden;
-        margin: 10px 0;
-    }
-    
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-        transition: width 0.5s ease;
-        border-radius: 12px;
-    }
-    
-    /* Copy button styling */
-    .stButton > button {
-        background: var(--secondary-color);
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.9rem;
-    }
-    
-    .stButton > button:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
-    }
-    
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .main-header {
-            padding: 1rem;
-        }
-        
-        .feature-card {
-            margin: 0.5rem 0;
-            padding: 1rem;
-        }
-    }
-    
-    /* Animation keyframes */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .fade-in {
-        animation: fadeIn 0.5s ease-in-out;
-    }
-    
-    /* Hide Streamlit elements */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    
-    .block-container {
-        padding-top: 2rem;
-    }
+    }}
+
+    .status-success {{ background-color: #d4edda; color: #155724; padding: .75rem; border-radius: 6px; border: 1px solid #c3e6cb; margin: 1rem 0; }}
+    .status-error   {{ background-color: #f8d7da; color: #721c24; padding: .75rem; border-radius: 6px; border: 1px solid #f5c6cb; margin: 1rem 0; }}
+    .status-warning {{ background-color: #fff3cd; color: #856404; padding: .75rem; border-radius: 6px; border: 1px solid #ffeaa7; margin: 1rem 0; }}
+
+    .progress-bar {{ width: 100%; height: 25px; background-color: var(--panel-bg); border-radius: 12px; overflow: hidden; margin: 10px 0; border: 1px solid var(--border-color); }}
+    .progress-fill {{ height: 100%; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); transition: width 0.5s ease; border-radius: 12px; }}
+
+    .stButton > button {{ background: var(--secondary-color); color: white; border: none; padding: .5rem 1rem; border-radius: 6px; cursor: pointer; font-size: .9rem; }}
+    .stButton > button:hover {{ opacity: .9; transform: translateY(-1px); }}
+
+    @media (max-width: 768px) {{
+        .main-header {{ padding: 1rem; }}
+        .feature-card {{ margin: .5rem 0; padding: 1rem; }}
+    }}
+    @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+    .fade-in {{ animation: fadeIn .5s ease-in-out; }}
+
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    header {{visibility: hidden;}}
+    .block-container {{ padding-top: 2rem; }}
     </style>
     """,
         unsafe_allow_html=True,
     )
+
+
+def render_sidebar_stats(container):
+    with container:
+        st.markdown("## 📊 Session Statistics")
+        stats = st.session_state.session_stats
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Total Processed", stats.get("total_processed", 0))
+        c2.metric("Successful", stats.get("successful_conversions", 0))
+        c3.metric("Failed", stats.get("failed_conversions", 0))
 
 
 def render_header():
@@ -742,9 +721,8 @@ def render_header():
     st.markdown(
         """
     <div class="main-header fade-in">
-        <h1>🔬 Enhanced DOI to BibTeX Converter</h1>
+        <h1>🔬 DOI to BibTeX Converter</h1>
         <p>Convert DOIs to properly formatted citations with advanced features</p>
-        <p><em>NumPy 2.0 Compatible Version</em></p>
     </div>
     """,
         unsafe_allow_html=True,
@@ -888,7 +866,7 @@ def initialize_session_state():
 def main():
     """Main application function"""
     st.set_page_config(
-        page_title="Enhanced DOI to BibTeX Converter",
+        page_title="DOI to BibTeX Converter",
         page_icon="🔬",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -896,12 +874,6 @@ def main():
 
     # Initialize session state
     initialize_session_state()
-
-    # Apply custom CSS
-    apply_custom_css()
-
-    # Render header
-    render_header()
 
     # Sidebar configuration
     with st.sidebar:
@@ -945,6 +917,8 @@ def main():
         st.session_state.user_preferences["batch_size"] = batch_size
 
         st.markdown("---")
+        stats_container = st.container()
+        render_sidebar_stats(stats_container)
 
         # Session statistics
         st.markdown("## 📊 Session Statistics")
@@ -976,6 +950,10 @@ def main():
                 file_name=f"doi_converter_session_{st.session_state.session_id}.json",
                 mime="application/json",
             )
+    apply_custom_css(st.session_state.user_preferences["theme"])
+
+    # Render header
+    render_header()
 
     # Main content tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs(
@@ -1178,6 +1156,9 @@ def main():
                     st.session_state.analytics_data = analyze_bibliography_data(
                         st.session_state.bibtex_entries
                     )
+
+                # Refresh sidebar stats immediately
+                render_sidebar_stats(stats_container)
 
     with tab2:
         st.markdown("### 📚 Conversion Results")
@@ -1499,53 +1480,77 @@ def main():
 
                 col1, col2, col3 = st.columns(3)
 
+                # Column 1: Publication Years
                 with col1:
-                    st.markdown("**Publication Years**")
+                    st.markdown("**📅 Publication Years**")
                     if analysis_data.get("years"):
+                        years = analysis_data["years"]
                         year_stats = {
-                            "Earliest": min(analysis_data["years"]),
-                            "Latest": max(analysis_data["years"]),
-                            "Range": max(analysis_data["years"])
-                            - min(analysis_data["years"]),
-                            "Average": sum(analysis_data["years"])
-                            / len(analysis_data["years"]),
+                            "Earliest": min(years),
+                            "Latest": max(years),
+                            "Range": max(years) - min(years),
+                            "Average": sum(years) / len(years) if years else 0,
                         }
                         for key, value in year_stats.items():
                             if key == "Average":
-                                st.write(f"{key}: {value:.1f}")
+                                st.write(f"• **{key}:** {value:.1f}")
                             else:
-                                st.write(f"{key}: {value}")
+                                st.write(f"• **{key}:** {value}")
 
+                # Column 2: Authors
                 with col2:
-                    st.markdown("**Authors**")
+                    st.markdown("**👥 Authors**")
                     if analysis_data.get("authors"):
-                        author_stats = Counter(analysis_data["authors"])
+                        authors_list = analysis_data["authors"]
+                        unique_authors = set(authors_list)
+                        author_stats = Counter(authors_list)
                         most_prolific = (
                             author_stats.most_common(1)[0]
                             if author_stats
                             else ("N/A", 0)
                         )
-                        st.write(f"Total unique: {len(set(analysis_data['authors']))}")
-                        st.write(f"Most prolific: {most_prolific[0]}")
-                        st.write(f"Publications: {most_prolific[1]}")
-                        st.write(
-                            f"Average per author: {len(analysis_data['authors']) / len(set(analysis_data['authors'])):.1f}"
+
+                        # Truncate long author names for display
+                        prolific_name = most_prolific[0]
+                        display_name = (
+                            (prolific_name[:25] + "...")
+                            if len(prolific_name) > 25
+                            else prolific_name
                         )
 
+                        st.write(f"• **Total unique:** {len(unique_authors)}")
+                        st.write(f"• **Most prolific:** {display_name}")
+                        st.write(f"• **Their publications:** {most_prolific[1]}")
+                        if unique_authors:
+                            st.write(
+                                f"• **Average per author:** {len(authors_list) / len(unique_authors):.1f}"
+                            )
+
+                # Column 3: Journals
                 with col3:
-                    st.markdown("**Journals**")
+                    st.markdown("**📰 Journals**")
                     if analysis_data.get("journals"):
-                        journal_stats = Counter(analysis_data["journals"])
+                        journals_list = analysis_data["journals"]
+                        journal_stats = Counter(journals_list)
                         top_journal = (
                             journal_stats.most_common(1)[0]
                             if journal_stats
                             else ("N/A", 0)
                         )
-                        st.write(f"Total unique: {len(set(analysis_data['journals']))}")
-                        st.write(f"Top journal: {top_journal[0][:30]}...")
-                        st.write(f"Publications: {top_journal[1]}")
+
+                        # Truncate long journal names for display
+                        journal_name = top_journal[0]
+                        display_journal = (
+                            (journal_name[:25] + "...")
+                            if len(journal_name) > 25
+                            else journal_name
+                        )
+
+                        st.write(f"• **Total unique:** {len(set(journals_list))}")
+                        st.write(f"• **Top journal:** {display_journal}")
+                        st.write(f"• **Their publications:** {top_journal[1]}")
                         st.write(
-                            f"DOI coverage: {analysis_data.get('doi_coverage', 0):.1f}%"
+                            f"• **DOI coverage:** {analysis_data.get('doi_coverage', 0):.1f}%"
                         )
 
                 # Export analytics
@@ -1596,20 +1601,6 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
     with tab5:
         st.markdown("### ℹ️ Help & Documentation")
-
-        # Compatibility notice
-        st.markdown(
-            """
-        #### 🔧 NumPy 2.0 Compatibility Notice
-        
-        This version has been optimized for NumPy 2.0 compatibility. The following changes were made:
-        - Removed pandas dependency to avoid NumPy conflicts
-        - Replaced Plotly charts with simple HTML/CSS charts
-        - Maintained all core functionality without problematic dependencies
-        """
-        )
-
-        st.markdown("---")
 
         # Feature overview
         st.markdown(
