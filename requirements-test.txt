@@ -1,0 +1,17 @@
+# DOI2BibTex V2 - Testing Requirements
+# Testing environment without development tools
+
+# Install with: pip install -r requirements-test.txt
+
+# Core requirements
+-r requirements.txt
+
+# Performance (needed for async tests)
+aiohttp>=3.8.0
+
+# Testing framework
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.10.0
+pytest-cov>=4.0.0
+coverage>=7.0.0

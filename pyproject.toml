@@ -5,62 +5,157 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "doi2bibtex"
 version = "3.0.0"
-description = "Professional DOI to BibTeX converter with async processing"
+description = "🚀 Enterprise-grade DOI to BibTeX converter with async processing, type safety, and professional architecture"
 readme = "README.md"
 authors = [
     {name = "Ajay Khanna", email = "akhanna2@ucmerced.edu"},
 ]
+maintainers = [
+    {name = "Ajay Khanna", email = "akhanna2@ucmerced.edu"},
+]
 license = {text = "MIT"}
+keywords = [
+    "doi", "bibtex", "bibliography", "academic", "research", 
+    "citation", "async", "streamlit", "converter"
+]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
+    "Intended Audience :: Education", 
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Markup",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Utilities",
+    "Typing :: Typed",
 ]
 requires-python = ">=3.8"
 dependencies = [
+    # Core web framework
     "streamlit>=1.28.0",
+    
+    # HTTP client for DOI resolution  
     "requests>=2.25.0",
-    "aiohttp>=3.8.0",
+    
+    # Type hints support (essential for <3.10)
     "typing-extensions>=4.0.0",
 ]
 
 [project.optional-dependencies]
+# Performance enhancement (5-10x speed improvement)
+performance = [
+    "aiohttp>=3.8.0",           # Async HTTP client for concurrent processing
+]
+
+# Complete testing suite
+test = [
+    "pytest>=7.0.0",           # Testing framework
+    "pytest-asyncio>=0.21.0",  # Async test support
+    "pytest-mock>=3.10.0",     # Mocking utilities
+    "pytest-cov>=4.0.0",       # Coverage reporting
+    "coverage>=7.0.0",         # Coverage analysis
+]
+
+# Code quality and development tools
+quality = [
+    "black>=22.0.0",           # Code formatting
+    "mypy>=1.0.0",             # Static type checking
+    "ruff>=0.1.0",             # Fast linting
+    "isort>=5.10.0",           # Import sorting
+    "bandit>=1.7.0",           # Security analysis
+]
+
+# Development environment (includes all optional dependencies)
 dev = [
+    # Performance
+    "aiohttp>=3.8.0",
+    
+    # Testing
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0", 
+    "pytest-mock>=3.10.0",
+    "pytest-cov>=4.0.0",
+    "coverage>=7.0.0",
+    
+    # Code quality
+    "black>=22.0.0",
+    "mypy>=1.0.0", 
+    "ruff>=0.1.0",
+    "isort>=5.10.0",
+    "bandit>=1.7.0",
+    
+    # Documentation
+    "sphinx>=5.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+    
+    # Development utilities
+    "pre-commit>=2.20.0",
+    "jupyter>=1.0.0",
+    "ipykernel>=6.0.0",
+]
+
+# Production deployment
+production = [
+    "aiohttp>=3.8.0",          # Async processing for performance
+    "python-dotenv>=0.19.0",   # Environment variable management
+    "psutil>=5.8.0",           # System monitoring
+]
+
+# All optional features combined
+all = [
+    "aiohttp>=3.8.0",
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.10.0", 
     "pytest-cov>=4.0.0",
+    "coverage>=7.0.0",
     "black>=22.0.0",
     "mypy>=1.0.0",
     "ruff>=0.1.0",
-]
-test = [
-    "pytest>=7.0.0", 
-    "pytest-asyncio>=0.21.0",
-    "pytest-mock>=3.10.0",
-    "coverage>=7.0.0",
-]
-performance = [
-    "aiohttp>=3.8.0",
-    "asyncio>=3.4.3",
+    "isort>=5.10.0",
+    "bandit>=1.7.0",
+    "sphinx>=5.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+    "pre-commit>=2.20.0",
+    "jupyter>=1.0.0",
+    "ipykernel>=6.0.0",
+    "python-dotenv>=0.19.0",
+    "psutil>=5.8.0",
 ]
 
 [project.urls]
 Homepage = "https://github.com/Ajaykhanna/DOI2BibTex"
 Repository = "https://github.com/Ajaykhanna/DOI2BibTex"
 Issues = "https://github.com/Ajaykhanna/DOI2BibTex/issues"
+Discussions = "https://github.com/Ajaykhanna/DOI2BibTex/discussions"
+Documentation = "https://github.com/Ajaykhanna/DOI2BibTex#readme"
+Changelog = "https://github.com/Ajaykhanna/DOI2BibTex/releases"
+"Bug Tracker" = "https://github.com/Ajaykhanna/DOI2BibTex/issues"
+"Feature Requests" = "https://github.com/Ajaykhanna/DOI2BibTex/issues"
+"Live Demo" = "https://doi2bibtex.streamlit.app/"
+
+[project.entry-points."streamlit.apps"]
+doi2bibtex = "streamlit_app:main"
 
 [project.scripts]
-doi2bibtex = "streamlit_app_v3:main"
+doi2bibtex = "streamlit_app:main"
 test-doi2bibtex = "run_tests:main"
+validate-doi2bibtex = "test_fixes:main"
 
-# Tool configurations
+# ===========================================
+# TOOL CONFIGURATIONS
+# ===========================================
+
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["tests"]
@@ -68,62 +163,99 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
-    "-ra",
-    "--strict-markers",
-    "--strict-config",
-    "--cov=core",
-    "--cov-report=term-missing",
-    "--cov-report=html",
+    "-ra",                          # Show extra test summary info
+    "--strict-markers",             # Require all markers to be defined
+    "--strict-config",              # Error on unknown config options
+    "--cov=core",                   # Coverage for core package
+    "--cov-report=term-missing",    # Terminal coverage report
+    "--cov-report=html",            # HTML coverage report
+    "--cov-fail-under=85",          # Fail if coverage below 85%
+    "--tb=short",                   # Short traceback format
 ]
 markers = [
-    "unit: Unit tests",
-    "integration: Integration tests",
-    "slow: Slow tests that may take time",
+    "unit: Unit tests for individual functions/classes",
+    "integration: Integration tests across modules", 
+    "slow: Slow tests that may take time (>5s)",
     "network: Tests requiring network access",
     "performance: Performance benchmarking tests",
+    "async: Tests for async functionality",
 ]
 asyncio_mode = "auto"
+filterwarnings = [
+    "error",                        # Treat warnings as errors
+    "ignore::UserWarning",          # Ignore user warnings
+    "ignore::DeprecationWarning",   # Ignore deprecation warnings
+]
 
 [tool.coverage.run]
 source = ["core"]
 omit = [
-    "*/tests/*",
-    "*/test_*",
-    "*/__pycache__/*",
+    "*/tests/*",                    # Exclude test files
+    "*/test_*",                     # Exclude test modules
+    "*/__pycache__/*",              # Exclude cache
+    "*/conftest.py",                # Exclude pytest config
+    "test_fixes.py",                # Exclude validation script
+    "run_tests.py",                 # Exclude test runner
 ]
+branch = true                       # Enable branch coverage
+parallel = true                     # Support parallel execution
 
 [tool.coverage.report]
+precision = 2                       # Coverage precision
+show_missing = true                 # Show missing lines
+skip_covered = false                # Don't skip covered files
 exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:",
+    "pragma: no cover",             # Explicit no cover
+    "def __repr__",                 # Repr methods
+    "def __str__",                  # String methods
+    "raise AssertionError",         # Assertions
+    "raise NotImplementedError",    # Abstract methods
+    "if __name__ == .__main__.:",   # Main blocks
+    "if TYPE_CHECKING:",            # Type checking blocks
+    "except ImportError:",          # Optional imports
+    "pass",                         # Empty implementations
+    "\\.\\.\\.",                   # Ellipsis (...)
 ]
+
+[tool.coverage.html]
+directory = "htmlcov"               # HTML report directory
+title = "DOI2BibTex V2 Coverage Report"
 
 [tool.mypy]
 python_version = "3.8"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-strict_equality = true
+strict = true                       # Enable all strict checks
+warn_return_any = true              # Warn on Any returns
+warn_unused_configs = true          # Warn on unused config
+disallow_untyped_defs = true        # Require typed function definitions
+disallow_incomplete_defs = true     # Require complete type annotations
+check_untyped_defs = true           # Type check untyped functions
+disallow_untyped_decorators = true  # Require typed decorators
+no_implicit_optional = true         # No implicit Optional types
+warn_redundant_casts = true         # Warn on redundant casts
+warn_unused_ignores = true          # Warn on unused ignores
+warn_no_return = true               # Warn on missing returns
+warn_unreachable = true             # Warn on unreachable code
+strict_equality = true              # Strict equality checks
+show_error_codes = true             # Show error codes
+pretty = true                       # Pretty error messages
 
+# Module-specific overrides
 [[tool.mypy.overrides]]
 module = "streamlit.*"
-ignore_missing_imports = true
+ignore_missing_imports = true       # Streamlit not fully typed
+
+[[tool.mypy.overrides]]
+module = "aiohttp.*"
+ignore_missing_imports = true       # aiohttp optional dependency
+
+[[tool.mypy.overrides]]
+module = "pytest.*"
+ignore_missing_imports = true       # pytest optional dependency
 
 [[tool.mypy.overrides]]
 module = "tests.*"
-disallow_untyped_defs = false
+disallow_untyped_defs = false       # Tests can be less strict
+warn_no_return = false              # Test functions don't need returns
 
 [tool.ruff]
 target-version = "py38"

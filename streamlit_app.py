@@ -1,8 +1,8 @@
 """
-DOI → BibTeX Converter - Streamlit Application (Version 3)
+DOI → BibTeX Converter - Streamlit Application (Version 2)
 
 **Author**: Ajay Khanna
-**Date**: Sep.05.2025 (V3 - Refactored)
+**Date**: Sep.05.2025 (V2 - Reimagined)
 **Place**: LANL
 **Lab**: Dr. Tretiak
 

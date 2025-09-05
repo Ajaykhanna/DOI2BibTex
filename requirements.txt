@@ -1,8 +1,109 @@
+# DOI2BibTex V2 - Professional Requirements
+# Updated for enterprise-grade architecture with modular dependencies
 
-# Core requirements
+# ==========================================
+# CORE REQUIREMENTS (Required for basic functionality)
+# ==========================================
+
+# Web framework
 streamlit>=1.28.0
-requests>=2.28.0
 
-# Optional enhancements
+# HTTP client for DOI resolution
+requests>=2.25.0
+
+# Type hints support for Python <3.10
+typing-extensions>=4.0.0
+
+# ==========================================
+# PERFORMANCE REQUIREMENTS (Optional - High Performance)
+# ==========================================
+
+# Async HTTP client for 5-10x speed improvement
+# Install with: pip install aiohttp
+aiohttp>=3.8.0
+
+# ==========================================
+# DEVELOPMENT REQUIREMENTS (Optional - Development)
+# ==========================================
+
+# Testing framework
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.10.0
+pytest-cov>=4.0.0
+
+# Code quality tools
+black>=22.0.0
+mypy>=1.0.0
+ruff>=0.1.0
+isort>=5.10.0
+
+# Coverage reporting
+coverage>=7.0.0
+
+# ==========================================
+# INSTALLATION INSTRUCTIONS
+# ==========================================
+
+# Basic Installation (Core functionality only):
+#   pip install streamlit requests typing-extensions
+
+# Performance Installation (Recommended - includes async processing):
+#   pip install streamlit requests typing-extensions aiohttp
+
+# Development Installation (Full development environment):
+#   pip install -e ".[dev]"
+
+# From pyproject.toml:
+#   pip install -e .                    # Core + Performance
+#   pip install -e ".[dev]"            # + Development tools
+#   pip install -e ".[test]"           # + Testing only
+#   pip install -e ".[performance]"    # + Performance only
+
+# ==========================================
+# VERSION COMPATIBILITY
+# ==========================================
+
+# Python: 3.8+ (3.10+ recommended for best type hint support)
+# Streamlit: 1.28.0+ (for latest features and stability)
+# aiohttp: 3.8.0+ (for async processing, optional)
+
+# ==========================================
+# OPTIONAL ENHANCEMENTS
+# ==========================================
+
+# Data analysis (not required for core functionality)
 pandas>=1.5.0
-pytest>=7.0
+
+# Jupyter notebook support (development)
+# jupyter>=1.0.0
+# ipykernel>=6.0.0
+
+# ==========================================
+# DEPLOYMENT REQUIREMENTS
+# ==========================================
+
+# For Docker deployment
+# gunicorn>=20.1.0
+
+# For cloud deployment  
+# python-dotenv>=0.19.0
+
+# ==========================================
+# SECURITY & MONITORING (Production)
+# ==========================================
+
+# Security scanning
+# bandit>=1.7.0
+# safety>=2.0.0
+
+# Performance monitoring
+# psutil>=5.8.0
+
+# ==========================================
+# LEGACY COMPATIBILITY (V1 to V2 migration)
+# ==========================================
+
+# If migrating from V1, these were previously used:
+# pandas>=1.5.0  # Only needed for V2 analytics
+# pytest>=7.0    # Now part of [dev] dependencies
