@@ -62,3 +62,71 @@ def summarize(entries: List[Tuple[str, str, dict]]) -> Dict[str, object]:
         "top_journals": Counter(journals).most_common(10),
         "years_hist": Counter(years),
     }
+
+
+def create_simple_bar_chart(
+    data: Dict[str, int], title: str, max_items: int = 10
+) -> str:
+    """
+    Generate a compact HTML snippet representing a simple horizontal bar chart.
+
+    Behavior
+    - Renders up to `max_items` in descending order by value.
+    - Produces simple inline styles suitable for embedding via st.markdown(..., unsafe_allow_html=True).
+    - If `data` is empty, renders a small card indicating "No data available".
+
+    Parameters
+    - data (Dict[str, int]): Mapping of labels to counts/values.
+    - title (str): Card title to display above the bars.
+    - max_items (int): Maximum number of bars to render (default 10).
+
+    Returns
+    - str: HTML string for the bar chart card.
+    """
+    if not data:
+        return f"<div class='card'><h4>{title}</h4><p>No data available</p></div>"
+    items = sorted(data.items(), key=lambda x: x[1], reverse=True)[:max_items]
+    max_val = max(v for _, v in items) if items else 1
+    rows = [f"<div class='card'><h4 style='margin:0 0 8px 0;'>{title}</h4>"]
+    for k, v in items:
+        w = int((v / max_val) * 220)
+        rows.append(
+            f"<div style='display:flex; align-items:center; margin:6px 0;'><div style='width:140px; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{k}</div><div style='height:12px; width:{w}px; background:#2196F3; margin:0 8px;'></div><div style='font-size:12px; font-weight:bold;'>{v}</div></div>"
+        )
+    rows.append("</div>")
+    return "\n".join(rows)
+
+
+def create_timeline_chart(years: List[int]) -> str:
+    """
+    Create a small publication timeline chart as an HTML snippet.
+
+    Behavior
+    - Computes counts per year from the provided years list.
+    - Scales bar widths relative to the year with the maximum count.
+    - Returns an HTML card that can be rendered with unsafe_allow_html=True.
+
+    Parameters
+    - years (List[int]): List of publication years (may contain duplicates).
+
+    Returns
+    - str: HTML string visualizing the timeline; if input is empty, returns
+      a "No data available" card.
+
+    Notes
+    - Expects integer years; non-integer values may produce unexpected output.
+    """
+    if not years:
+        return "<div class='card'><h4>Publication Timeline</h4><p>No data available</p></div>"
+    counts = Counter(years)
+    keys = sorted(counts.keys())
+    max_val = max(counts.values())
+    html = ["<div class='card'><h4>Publication Timeline</h4>"]
+    for y in keys:
+        v = counts[y]
+        w = int((v / max_val) * 240)
+        html.append(
+            f"<div style='display:flex; align-items:center; margin:6px 0;'><div style='width:60px; text-align:right; padding-right:8px;'>{y}</div><div style='height:12px; width:{w}px; background:#4CAF50; margin-right:8px;'></div><div style='font-weight:bold;'>{v}</div></div>"
+        )
+    html.append("</div>")
+    return "\n".join(html)
