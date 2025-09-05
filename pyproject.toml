@@ -1,0 +1,31 @@
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "doi2bibtex"
+version = "2.1.0"
+description = "Enhanced DOI to BibTeX Converter with batch processing, exports, analytics, and citation styles"
+authors = [
+    { name="Ajay Khanna", email="akhanna2@ucmerced.edu" }
+]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "streamlit>=1.28.0",
+    "requests>=2.28.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pandas>=1.5.0",
+    "ruff",
+    "black",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core"]
