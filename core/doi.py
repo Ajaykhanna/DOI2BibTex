@@ -52,7 +52,7 @@ def clean_doi(raw: str) -> str:
         if doi.startswith(pref):
             doi = doi[len(pref) :].strip()
     # de-URL-encode and strip trailing punctuation commonly pasted from prose
-    doi = urllib.parse.unquote(doi).strip().rstrip(".,;:)")
+    doi = urllib.parse.unquote(doi).strip().rstrip(".,;:)}")
     return doi
 
 

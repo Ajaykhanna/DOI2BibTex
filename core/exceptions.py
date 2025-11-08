@@ -129,7 +129,11 @@ class BatchProcessingError(Exception):
 
 
 def handle_exception(func):
-    """Decorator to handle exceptions and display user-friendly messages."""
+    """Decorator to handle exceptions and display user-friendly messages.
+
+    Note: This decorator returns None on exceptions. It should only be used
+    on functions where None is an acceptable return value.
+    """
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -142,7 +146,7 @@ def handle_exception(func):
             st.error(f"**Unexpected Error:** {str(e)}")
             st.caption("Please try again or contact support if the problem persists.")
             return None
-    
+
     return wrapper
 
 

@@ -303,7 +303,6 @@ class DOIProcessor:
             count=1
         )
     
-    @handle_exception
     def process_batch(self, dois: list[str], progress_callback=None) -> ProcessingResult:
         """
         Process a batch of DOIs.
