@@ -1,7 +1,7 @@
 from __future__ import annotations
 import re
 import urllib.parse
-from typing import Dict, Any
+from typing import Any
 
 DOI_HOSTS = (
     "https://doi.org/",
@@ -83,7 +83,7 @@ def is_valid_doi(doi: str) -> bool:
     return bool(DOI_REGEX.match(doi or ""))
 
 
-def extract_bibtex_fields(bibtex: str) -> Dict[str, str]:
+def extract_bibtex_fields(bibtex: str) -> dict[str, str]:
     """
     Extract common fields from a BibTeX entry string.
 

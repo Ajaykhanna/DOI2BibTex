@@ -1,9 +1,8 @@
 from __future__ import annotations
 import re
-from typing import Dict, List
 
 
-def order_bibtex_fields(bibtex: str, field_order: List[str]) -> str:
+def order_bibtex_fields(bibtex: str, field_order: list[str]) -> str:
     """
     Reorder fields inside a single BibTeX entry using a simple regex-based approach.
 
@@ -65,7 +64,7 @@ def safe_replace_key(bibtex: str, old: str, new: str) -> str:
     )
 
 
-def bibtex_to_ris(meta: Dict[str, str]) -> str:
+def bibtex_to_ris(meta: dict[str, str]) -> str:
     """
     Convert a metadata dictionary (from a BibTeX entry) into a simple RIS string.
 
@@ -114,7 +113,7 @@ def bibtex_to_ris(meta: Dict[str, str]) -> str:
     return "\n".join(lines)
 
 
-def bibtex_to_endnote(meta: Dict[str, str]) -> str:
+def bibtex_to_endnote(meta: dict[str, str]) -> str:
     """
     Convert a metadata dictionary (from a BibTeX entry) into a simple EndNote string.
 

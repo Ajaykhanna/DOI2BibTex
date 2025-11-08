@@ -1,0 +1,37 @@
+[server]
+# Security settings
+enableCORS = false
+enableXsrfProtection = true
+maxUploadSize = 10
+headless = true
+
+# Port configuration
+port = 8501
+address = "0.0.0.0"
+
+# File watching
+fileWatcherType = "auto"
+
+[browser]
+# Privacy settings
+gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 8501
+
+[theme]
+# Default theme
+base = "light"
+primaryColor = "#1f77b4"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+
+[runner]
+# Magic commands
+magicEnabled = true
+
+# Fast reruns
+fastReruns = true
+
+# Enforce serializable session state
+enforceSerializableSessionState = false

@@ -8,7 +8,7 @@ better type safety and IDE support throughout the application.
 from __future__ import annotations
 
 from typing import (
-    Any, Dict, List, Optional, Union, Tuple, Protocol, TypeVar,
+    Any, Protocol, TypeVar,
     Callable, Awaitable, Iterator, TypedDict, Literal
 )
 from dataclasses import dataclass
@@ -20,7 +20,7 @@ import streamlit as st
 DOI = str
 CitationKey = str 
 BibTeXContent = str
-JSONData = Dict[str, Any]
+JSONData = dict[str, Any]
 FieldName = str
 FieldValue = str
 
@@ -40,27 +40,27 @@ T = TypeVar('T')
 class BibTeXFields(TypedDict, total=False):
     """Type hint for BibTeX field dictionary."""
     key: str
-    title: Optional[str]
-    author: Optional[str] 
-    journal: Optional[str]
-    journal_full: Optional[str]
-    journal_abbrev: Optional[str]
-    volume: Optional[str]
-    number: Optional[str]
-    pages: Optional[str]
-    year: Optional[str]
-    publisher: Optional[str]
-    doi: Optional[str]
-    abstract: Optional[str]
-    url: Optional[str]
+    title: str | None
+    author: str | None
+    journal: str | None
+    journal_full: str | None
+    journal_abbrev: str | None
+    volume: str | None
+    number: str | None
+    pages: str | None
+    year: str | None
+    publisher: str | None
+    doi: str | None
+    abstract: str | None
+    url: str | None
 
 
 class EntryMetadata(TypedDict):
     """Type hint for entry metadata dictionary."""
     doi: DOI
     status: ProcessingStatus
-    error: Optional[str]
-    metadata: Optional[BibTeXFields]
+    error: str | None
+    metadata: BibTeXFields | None
 
 
 class AnalyticsData(TypedDict):
@@ -70,9 +70,9 @@ class AnalyticsData(TypedDict):
     unique_authors: int
     unique_journals: int
     doi_coverage: float
-    top_authors: List[Tuple[str, int]]
-    top_journals: List[Tuple[str, int]]
-    years_hist: Dict[int, int]
+    top_authors: list[tuple[str, int]]
+    top_journals: list[tuple[str, int]]
+    years_hist: dict[int, int]
 
 
 # Progress callback type
@@ -83,17 +83,17 @@ class HTTPResponse(TypedDict):
     """Type hint for HTTP response data."""
     status_code: int
     content: bytes
-    headers: Dict[str, str]
+    headers: dict[str, str]
 
 
 class CrossrefMessage(TypedDict, total=False):
     """Type hint for Crossref API response message."""
     DOI: str
-    title: List[str]
-    author: List[Dict[str, Any]]
-    container_title: List[str]
-    short_container_title: List[str]
-    published_print: Dict[str, List[int]]
+    title: list[str]
+    author: list[dict[str, Any]]
+    container_title: list[str]
+    short_container_title: list[str]
+    published_print: dict[str, list[int]]
     volume: str
     issue: str
     page: str
@@ -115,34 +115,34 @@ class ConfigProtocol(Protocol):
     use_abbrev_journal: bool
     normalize_authors: bool
     key_pattern: KeyPatternType
-    field_order: List[str]
+    field_order: list[str]
     style_preview: StyleType
 
 
 class StateProtocol(Protocol):
     """Protocol for application state objects."""
-    entries: List[Any]
+    entries: list[Any]
     analytics: AnalyticsData
-    
+
     @property
     def has_entries(self) -> bool: ...
-    @property 
+    @property
     def entry_count(self) -> int: ...
-    def get_cite_keys(self) -> List[CitationKey]: ...
+    def get_cite_keys(self) -> list[CitationKey]: ...
     def get_bibtex_content(self) -> BibTeXContent: ...
 
 
 class ProcessorProtocol(Protocol):
     """Protocol for DOI processor objects."""
-    
-    def parse_input(self, raw_text: str, uploaded_file: Any) -> List[DOI]: ...
-    
+
+    def parse_input(self, raw_text: str, uploaded_file: Any) -> list[DOI]: ...
+
     def fetch_bibtex(self, doi: DOI) -> Any: ...
-    
+
     def process_batch(
-        self, 
-        dois: List[DOI], 
-        progress_callback: Optional[ProgressCallback]
+        self,
+        dois: list[DOI],
+        progress_callback: ProgressCallback | None
     ) -> Any: ...
 
 
@@ -173,26 +173,26 @@ class DOIValidatorABC(ABC):
 
 class DataExporterABC(ABC):
     """Abstract base class for data exporters."""
-    
+
     @abstractmethod
-    def export(self, entries: List[Any], format_type: str) -> str:
+    def export(self, entries: list[Any], format_type: str) -> str:
         """Export entries to specified format."""
         pass
 
 
 class CacheProviderABC(ABC):
     """Abstract base class for cache providers."""
-    
+
     @abstractmethod
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get cached value."""
         pass
-    
+
     @abstractmethod
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
+    def set(self, key: str, value: Any, ttl: int | None = None) -> None:
         """Set cached value with optional TTL."""
         pass
-    
+
     @abstractmethod
     def clear(self) -> None:
         """Clear all cached values."""
@@ -203,10 +203,10 @@ class CacheProviderABC(ABC):
 @dataclass
 class ProcessingResult:
     """Result of a DOI processing operation."""
-    entries: List[Any]
+    entries: list[Any]
     successful_count: int
     failed_count: int
-    failed_dois: List[DOI]
+    failed_dois: list[DOI]
     analytics: AnalyticsData
     execution_time: float
     
@@ -225,9 +225,9 @@ class ProcessingResult:
 class ValidationResult:
     """Result of input validation."""
     is_valid: bool
-    errors: List[str]
-    warnings: List[str]
-    cleaned_value: Optional[Any] = None
+    errors: list[str]
+    warnings: list[str]
+    cleaned_value: Any | None = None
 
 
 @dataclass
@@ -237,7 +237,7 @@ class ExportResult:
     format_type: str
     entry_count: int
     file_size: int
-    warnings: List[str]
+    warnings: list[str]
 
 
 # Streamlit-specific types
@@ -279,12 +279,12 @@ class TypeGuard:
 # Context manager types
 class TimedOperation:
     """Context manager for timing operations."""
-    
-    def __init__(self, operation_name: str, logger: Optional[LoggerProtocol] = None):
+
+    def __init__(self, operation_name: str, logger: LoggerProtocol | None = None):
         self.operation_name = operation_name
         self.logger = logger
-        self.start_time: Optional[float] = None
-        self.end_time: Optional[float] = None
+        self.start_time: float | None = None
+        self.end_time: float | None = None
     
     def __enter__(self) -> TimedOperation:
         import time
@@ -305,7 +305,7 @@ class TimedOperation:
                 self.logger.error(f"Failed {self.operation_name} after {duration:.3f}s")
     
     @property
-    def duration(self) -> Optional[float]:
+    def duration(self) -> float | None:
         """Get operation duration if completed."""
         if self.start_time and self.end_time:
             return self.end_time - self.start_time

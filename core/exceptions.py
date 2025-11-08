@@ -8,7 +8,7 @@ to replace generic error messages throughout the application.
 from __future__ import annotations
 
 import streamlit as st
-from typing import Optional, Any
+from typing import Any
 import logging
 
 
@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 class DOIError(Exception):
     """Base exception for DOI-related errors."""
-    
-    def __init__(self, message: str, doi: Optional[str] = None, details: Optional[str] = None):
+
+    def __init__(self, message: str, doi: str | None = None, details: str | None = None):
         self.message = message
         self.doi = doi
         self.details = details
@@ -38,8 +38,8 @@ class DOIError(Exception):
 
 class InvalidDOIError(DOIError):
     """Raised when DOI format is invalid."""
-    
-    def __init__(self, doi: str, reason: Optional[str] = None):
+
+    def __init__(self, doi: str, reason: str | None = None):
         message = f"Invalid DOI format"
         details = reason if reason else "DOI does not match expected pattern"
         super().__init__(message, doi, details)
@@ -56,8 +56,8 @@ class DOINotFoundError(DOIError):
 
 class NetworkError(DOIError):
     """Raised when network requests fail."""
-    
-    def __init__(self, message: str, doi: Optional[str] = None, status_code: Optional[int] = None):
+
+    def __init__(self, message: str, doi: str | None = None, status_code: int | None = None):
         details = None
         if status_code:
             if status_code == 429:
@@ -74,8 +74,8 @@ class NetworkError(DOIError):
 
 class FileProcessingError(Exception):
     """Raised when file processing fails."""
-    
-    def __init__(self, message: str, filename: Optional[str] = None, details: Optional[str] = None):
+
+    def __init__(self, message: str, filename: str | None = None, details: str | None = None):
         self.message = message
         self.filename = filename
         self.details = details
@@ -94,8 +94,8 @@ class FileProcessingError(Exception):
 
 class ConfigurationError(Exception):
     """Raised when configuration is invalid."""
-    
-    def __init__(self, message: str, field: Optional[str] = None):
+
+    def __init__(self, message: str, field: str | None = None):
         self.message = message
         self.field = field
         super().__init__(message)

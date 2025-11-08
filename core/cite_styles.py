@@ -1,9 +1,8 @@
 from __future__ import annotations
-from typing import Dict, List
 import re
 
 
-def _authors_list(s: str) -> List[str]:
+def _authors_list(s: str) -> list[str]:
     """Parse an author string into a list of individual author names.
 
     Parameters
@@ -22,7 +21,7 @@ def _authors_list(s: str) -> List[str]:
     return [a.strip() for a in (s or "").split(" and ") if a.strip()]
 
 
-def _authors_apa(authors: List[str]) -> str:
+def _authors_apa(authors: list[str]) -> str:
     """Format a list of author names according to a compact APA-style string.
 
     Parameters
@@ -72,7 +71,7 @@ def _authors_apa(authors: List[str]) -> str:
     return ", ".join(apa_name(a) for a in authors[:-1]) + f", & {apa_name(authors[-1])}"
 
 
-def _authors_mla(authors: List[str]) -> str:
+def _authors_mla(authors: list[str]) -> str:
     """Format a list of authors in a simple MLA-style string.
 
     Parameters
@@ -94,7 +93,7 @@ def _authors_mla(authors: List[str]) -> str:
     return f"{authors[0]}, et al."
 
 
-def _authors_chicago(authors: List[str]) -> str:
+def _authors_chicago(authors: list[str]) -> str:
     """Format a list of authors for Chicago-style citations (concise variants).
 
     Parameters
@@ -118,7 +117,7 @@ def _authors_chicago(authors: List[str]) -> str:
     return authors[0] + ", et al."
 
 
-def format_apa(meta: Dict[str, str]) -> str:
+def format_apa(meta: dict[str, str]) -> str:
     """Build a single-line APA-style citation string from metadata.
 
     Parameters
@@ -157,7 +156,7 @@ def format_apa(meta: Dict[str, str]) -> str:
     return f"{A} ({Y}). {T}. {J}, {vol_issue}{pages}.{doi}".strip()
 
 
-def format_mla(meta: Dict[str, str]) -> str:
+def format_mla(meta: dict[str, str]) -> str:
     """Build a simple MLA-style citation string from metadata.
 
     Parameters
@@ -192,7 +191,7 @@ def format_mla(meta: Dict[str, str]) -> str:
     return " ".join([p for p in parts if p and p != ","]).replace(" ,", ",")
 
 
-def format_chicago(meta: Dict[str, str]) -> str:
+def format_chicago(meta: dict[str, str]) -> str:
     """Build a concise Chicago-style citation string from metadata.
 
     Parameters

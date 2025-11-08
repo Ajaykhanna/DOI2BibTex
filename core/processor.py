@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 import time
 import logging
-from typing import List, Dict, Any, Tuple, Optional
+from typing import Any
 from dataclasses import dataclass
 
 from .config import AppConfig
@@ -39,11 +39,11 @@ APP_EMAIL = "akhanna2@ucmerced.edu"
 @dataclass
 class ProcessingResult:
     """Result of DOI processing operation."""
-    entries: List[BibtexEntry]
+    entries: list[BibtexEntry]
     successful_count: int
     failed_count: int
-    failed_dois: List[str]
-    analytics: Dict[str, Any]
+    failed_dois: list[str]
+    analytics: dict[str, Any]
     
     @property
     def total_count(self) -> int:
@@ -63,7 +63,7 @@ class DOIProcessor:
         self.config = config
         
     @handle_exception
-    def parse_input(self, raw_text: str, uploaded_file=None) -> List[str]:
+    def parse_input(self, raw_text: str, uploaded_file=None) -> list[str]:
         """
         Parse raw input and optional uploaded file to extract DOIs.
         
@@ -78,7 +78,7 @@ class DOIProcessor:
             InvalidDOIError: When DOI validation fails
             FileProcessingError: When file processing fails
         """
-        items: List[str] = []
+        items: list[str] = []
         
         # Process raw text input
         if raw_text:
@@ -131,8 +131,8 @@ class DOIProcessor:
             NetworkError: When network request fails
         """
         logger.info(f"Fetching BibTeX for DOI: {doi}")
-        
-        metadata: Dict[str, Any] = {"doi": doi, "status": "processing"}
+
+        metadata: dict[str, Any] = {"doi": doi, "status": "processing"}
         
         # Fetch BibTeX from DOI resolver
         url = DOI_BASE + doi
@@ -204,7 +204,7 @@ class DOIProcessor:
             metadata=metadata
         )
     
-    def _enrich_with_crossref(self, doi: str, fields: Dict[str, Any]) -> Dict[str, Any]:
+    def _enrich_with_crossref(self, doi: str, fields: dict[str, Any]) -> dict[str, Any]:
         """Enrich BibTeX fields with Crossref JSON data."""
         try:
             json_data, error = get_json_with_retry(
@@ -236,7 +236,7 @@ class DOIProcessor:
         
         return fields
     
-    def _extract_journal_info(self, crossref_message: Dict[str, Any], fields: Dict[str, Any]) -> None:
+    def _extract_journal_info(self, crossref_message: dict[str, Any], fields: dict[str, Any]) -> None:
         """Extract journal information from Crossref message."""
         # Full journal title
         container_title = crossref_message.get("container-title")
@@ -252,7 +252,7 @@ class DOIProcessor:
         elif isinstance(short_title, str):
             fields["journal_abbrev"] = short_title
     
-    def _update_journal_info(self, bib_content: str, fields: Dict[str, Any]) -> str:
+    def _update_journal_info(self, bib_content: str, fields: dict[str, Any]) -> str:
         """Update journal information in BibTeX content."""
         if self.config.use_abbrev_journal and fields.get("journal_abbrev"):
             fields["journal"] = fields["journal_abbrev"]
@@ -267,7 +267,7 @@ class DOIProcessor:
         
         return bib_content
     
-    def _handle_abstracts(self, bib_content: str, fields: Dict[str, Any]) -> str:
+    def _handle_abstracts(self, bib_content: str, fields: dict[str, Any]) -> str:
         """Handle abstract inclusion in BibTeX content."""
         if not self.config.include_abstracts:
             fields.pop("abstract", None)
@@ -304,7 +304,7 @@ class DOIProcessor:
         )
     
     @handle_exception
-    def process_batch(self, dois: List[str], progress_callback=None) -> ProcessingResult:
+    def process_batch(self, dois: list[str], progress_callback=None) -> ProcessingResult:
         """
         Process a batch of DOIs.
         
@@ -328,9 +328,9 @@ class DOIProcessor:
             )
         
         logger.info(f"Processing batch of {len(dois)} DOIs")
-        
-        entries: List[BibtexEntry] = []
-        failed_dois: List[str] = []
+
+        entries: list[BibtexEntry] = []
+        failed_dois: list[str] = []
         
         total = len(dois)
         for i, doi in enumerate(dois, 1):

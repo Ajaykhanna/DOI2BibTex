@@ -8,7 +8,7 @@ and default values, replacing the scattered session state dictionary.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Literal, Dict, Any
+from typing import Literal, Any
 import streamlit as st
 
 
@@ -49,7 +49,7 @@ class AppConfig:
     use_abbrev_journal: bool = False
     
     # Citation Settings
-    field_order: List[str] = field(default_factory=lambda: DEFAULT_FIELD_ORDER.copy())
+    field_order: list[str] = field(default_factory=lambda: DEFAULT_FIELD_ORDER.copy())
     key_pattern: KeyPatternType = "author_year"
     style_preview: StyleType = "APA"
     

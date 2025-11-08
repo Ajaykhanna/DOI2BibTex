@@ -1,7 +1,6 @@
 from __future__ import annotations
 import re
 import hashlib
-from typing import Dict
 
 
 def sanitize(s: str) -> str:
@@ -81,7 +80,7 @@ def first_author_lastname(authors_field: str) -> str:
     return sanitize(first.split()[-1])
 
 
-def make_key(meta: Dict[str, str], pattern: str = "author_year") -> str:
+def make_key(meta: dict[str, str], pattern: str = "author_year") -> str:
     """
     Construct a base bibliographic key from metadata according to a chosen pattern.
 

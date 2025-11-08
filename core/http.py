@@ -1,6 +1,5 @@
 from __future__ import annotations
 import time
-from typing import Dict, Optional, Tuple
 import requests
 
 DEFAULT_TIMEOUT = 10
@@ -9,7 +8,7 @@ DEFAULT_MAX_RETRIES = 3
 
 def polite_headers(
     email: str | None = None, accept: str = "application/x-bibtex; charset=utf-8"
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Return a polite set of HTTP headers for DOI-to-BibTeX requests.
 
     Constructs a User-Agent identifying this application and includes an optional
@@ -36,10 +35,10 @@ def polite_headers(
 
 def get_with_retry(
     url: str,
-    headers: Dict[str, str],
+    headers: dict[str, str],
     timeout: int = DEFAULT_TIMEOUT,
     max_retries: int = DEFAULT_MAX_RETRIES,
-) -> Tuple[Optional[requests.Response], Optional[str]]:
+) -> tuple[requests.Response | None, str | None]:
     """Perform an HTTP GET with exponential backoff and respect for Retry-After.
 
     This function will attempt to GET the given URL using the provided headers.

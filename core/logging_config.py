@@ -9,7 +9,6 @@ import logging
 import logging.handlers
 import sys
 from pathlib import Path
-from typing import Optional
 
 
 class ColoredFormatter(logging.Formatter):
@@ -35,7 +34,7 @@ class ColoredFormatter(logging.Formatter):
 
 def setup_logging(
     level: str = "INFO",
-    log_file: Optional[str] = None,
+    log_file: str | None = None,
     enable_console: bool = True,
     enable_colors: bool = True
 ) -> logging.Logger:

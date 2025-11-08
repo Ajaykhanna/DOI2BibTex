@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import time
 import logging
-from typing import List, Dict, Any, Optional, Callable, Tuple
+from typing import Any, Callable
 from dataclasses import dataclass
 
 # Optional aiohttp import
@@ -44,11 +44,11 @@ APP_EMAIL = "akhanna2@ucmerced.edu"
 @dataclass
 class AsyncProcessingResult:
     """Result of async DOI processing operation."""
-    entries: List[BibtexEntry]
+    entries: list[BibtexEntry]
     successful_count: int
     failed_count: int
-    failed_dois: List[DOI]
-    analytics: Dict[str, Any]
+    failed_dois: list[DOI]
+    analytics: dict[str, Any]
     execution_time: float
     total_requests: int
     requests_per_second: float
@@ -75,8 +75,8 @@ class AsyncDOIProcessor:
             )
         
         self.config = config
-        self.session: Optional[aiohttp.ClientSession] = None
-        self._semaphore: Optional[asyncio.Semaphore] = None
+        self.session: aiohttp.ClientSession | None = None
+        self._semaphore: asyncio.Semaphore | None = None
         
     async def __aenter__(self):
         """Async context manager entry."""
@@ -123,11 +123,11 @@ class AsyncDOIProcessor:
         logger.info("Closed async session")
     
     async def _fetch_with_retry(
-        self, 
-        url: str, 
-        headers: Optional[Dict[str, str]] = None,
+        self,
+        url: str,
+        headers: dict[str, str] | None = None,
         json_response: bool = False
-    ) -> Tuple[Any, Optional[str]]:
+    ) -> tuple[Any, str | None]:
         """
         Fetch URL with retry logic and rate limiting.
         
@@ -195,7 +195,7 @@ class AsyncDOIProcessor:
         
         return None, "Max retries exceeded"
     
-    async def _enrich_with_crossref(self, doi: DOI, fields: Dict[str, Any]) -> Dict[str, Any]:
+    async def _enrich_with_crossref(self, doi: DOI, fields: dict[str, Any]) -> dict[str, Any]:
         """Enrich BibTeX fields with Crossref JSON data asynchronously."""
         if not (self.config.fetch_abstracts or self.config.use_abbrev_journal):
             return fields
@@ -229,7 +229,7 @@ class AsyncDOIProcessor:
         
         return fields
     
-    def _extract_journal_info(self, crossref_message: Dict[str, Any], fields: Dict[str, Any]) -> None:
+    def _extract_journal_info(self, crossref_message: dict[str, Any], fields: dict[str, Any]) -> None:
         """Extract journal information from Crossref message."""
         # Full journal title
         container_title = crossref_message.get("container-title")
@@ -286,8 +286,8 @@ class AsyncDOIProcessor:
             NetworkError: When network request fails
         """
         logger.debug(f"Fetching BibTeX for DOI: {doi}")
-        
-        metadata: Dict[str, Any] = {"doi": doi, "status": "processing"}
+
+        metadata: dict[str, Any] = {"doi": doi, "status": "processing"}
         
         # Fetch BibTeX from DOI resolver
         url = DOI_BASE + doi
@@ -341,7 +341,7 @@ class AsyncDOIProcessor:
             metadata=metadata
         )
     
-    def _update_journal_info(self, bib_content: str, fields: Dict[str, Any]) -> str:
+    def _update_journal_info(self, bib_content: str, fields: dict[str, Any]) -> str:
         """Update journal information in BibTeX content."""
         if self.config.use_abbrev_journal and fields.get("journal_abbrev"):
             fields["journal"] = fields["journal_abbrev"]
@@ -356,7 +356,7 @@ class AsyncDOIProcessor:
         
         return bib_content
     
-    def _handle_abstracts(self, bib_content: str, fields: Dict[str, Any]) -> str:
+    def _handle_abstracts(self, bib_content: str, fields: dict[str, Any]) -> str:
         """Handle abstract inclusion in BibTeX content."""
         if not self.config.include_abstracts:
             fields.pop("abstract", None)
@@ -368,9 +368,9 @@ class AsyncDOIProcessor:
         return bib_content
     
     async def process_batch_async(
-        self, 
-        dois: List[DOI], 
-        progress_callback: Optional[ProgressCallback] = None
+        self,
+        dois: list[DOI],
+        progress_callback: ProgressCallback | None = None
     ) -> AsyncProcessingResult:
         """
         Process a batch of DOIs asynchronously with concurrency control.
@@ -396,15 +396,15 @@ class AsyncDOIProcessor:
         
         logger.info(f"Starting async batch processing of {len(dois)} DOIs")
         start_time = time.perf_counter()
-        
-        entries: List[BibtexEntry] = []
-        failed_dois: List[DOI] = []
+
+        entries: list[BibtexEntry] = []
+        failed_dois: list[DOI] = []
         completed_count = 0
         
         # Create semaphore for progress tracking
         progress_lock = asyncio.Lock()
         
-        async def process_single_doi(doi: DOI) -> Optional[BibtexEntry]:
+        async def process_single_doi(doi: DOI) -> BibtexEntry | None:
             """Process a single DOI with error handling and progress tracking."""
             nonlocal completed_count
             
@@ -489,9 +489,9 @@ class AsyncDOIProcessor:
 
 # Convenience function for async processing
 async def process_dois_async(
-    config: AppConfig, 
-    dois: List[DOI], 
-    progress_callback: Optional[ProgressCallback] = None
+    config: AppConfig,
+    dois: list[DOI],
+    progress_callback: ProgressCallback | None = None
 ) -> AsyncProcessingResult:
     """
     Process DOIs asynchronously using context manager.
@@ -520,8 +520,8 @@ async def process_dois_async(
 # Synchronous wrapper for async processing
 def process_dois_sync(
     config: AppConfig,
-    dois: List[DOI],
-    progress_callback: Optional[ProgressCallback] = None
+    dois: list[DOI],
+    progress_callback: ProgressCallback | None = None
 ) -> AsyncProcessingResult:
     """
     Synchronous wrapper for async DOI processing.
@@ -558,9 +558,9 @@ def process_dois_sync(
 # Performance comparison utility
 async def compare_sync_vs_async_performance(
     config: AppConfig,
-    test_dois: List[DOI],
+    test_dois: list[DOI],
     num_runs: int = 3
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Compare performance between sync and async processing.
     

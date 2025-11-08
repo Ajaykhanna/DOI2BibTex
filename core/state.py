@@ -8,7 +8,7 @@ and analytics, replacing direct session state manipulation.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Tuple, Dict, Any, Optional
+from typing import Any
 import streamlit as st
 
 
@@ -17,20 +17,20 @@ class BibtexEntry:
     """Represents a single BibTeX entry with metadata."""
     key: str
     content: str
-    metadata: Dict[str, Any]
-    
+    metadata: dict[str, Any]
+
     @property
-    def doi(self) -> Optional[str]:
+    def doi(self) -> str | None:
         """Extract DOI from metadata."""
         return self.metadata.get("doi")
     
     @property
-    def title(self) -> Optional[str]:
+    def title(self) -> str | None:
         """Extract title from metadata."""
         return self.metadata.get("title")
     
     @property
-    def year(self) -> Optional[int]:
+    def year(self) -> int | None:
         """Extract publication year from metadata."""
         year_str = self.metadata.get("year")
         if year_str:
@@ -46,18 +46,18 @@ class BibtexEntry:
         return self.metadata.get("status") == "error"
     
     @property
-    def error_message(self) -> Optional[str]:
+    def error_message(self) -> str | None:
         """Get error message if entry has error status."""
         if self.has_error:
             return self.metadata.get("error")
         return None
 
 
-@dataclass 
+@dataclass
 class AppState:
     """Application state container."""
-    entries: List[BibtexEntry]
-    analytics: Dict[str, Any]
+    entries: list[BibtexEntry]
+    analytics: dict[str, Any]
     
     @property
     def has_entries(self) -> bool:
@@ -70,12 +70,12 @@ class AppState:
         return len(self.entries)
     
     @property
-    def successful_entries(self) -> List[BibtexEntry]:
+    def successful_entries(self) -> list[BibtexEntry]:
         """Get entries that were successfully processed."""
         return [entry for entry in self.entries if not entry.has_error]
     
     @property
-    def failed_entries(self) -> List[BibtexEntry]:
+    def failed_entries(self) -> list[BibtexEntry]:
         """Get entries that failed to process."""
         return [entry for entry in self.entries if entry.has_error]
     
@@ -86,7 +86,7 @@ class AppState:
             return 0.0
         return (len(self.successful_entries) / len(self.entries)) * 100
     
-    def get_cite_keys(self) -> List[str]:
+    def get_cite_keys(self) -> list[str]:
         """Get list of citation keys from all entries."""
         return [entry.key for entry in self.entries]
     
@@ -160,7 +160,7 @@ class StateManager:
         st.session_state["analytics"] = state.analytics
     
     @classmethod
-    def add_entries(cls, new_entries: List[BibtexEntry]) -> AppState:
+    def add_entries(cls, new_entries: list[BibtexEntry]) -> AppState:
         """Add new entries to the application state."""
         state = cls.load()
         state.entries.extend(new_entries)
@@ -177,7 +177,7 @@ class StateManager:
         return state
     
     @classmethod
-    def update_analytics(cls, analytics: Dict[str, Any]) -> AppState:
+    def update_analytics(cls, analytics: dict[str, Any]) -> AppState:
         """Update analytics data."""
         state = cls.load()
         state.analytics = analytics
@@ -185,7 +185,7 @@ class StateManager:
         return state
     
     @classmethod
-    def update_entry_keys(cls, key_mapping: Dict[str, str]) -> AppState:
+    def update_entry_keys(cls, key_mapping: dict[str, str]) -> AppState:
         """Update multiple entry keys at once."""
         state = cls.load()
         

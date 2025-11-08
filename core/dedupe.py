@@ -1,9 +1,8 @@
 from __future__ import annotations
-from typing import List, Tuple
 from .doi import normalize_title
 
 
-def build_index(entries: List[Tuple[str, str, dict]]) -> dict:
+def build_index(entries: list[tuple[str, str, dict]]) -> dict:
 	"""Build an index to find duplicate bibliographic entries.
 
 	Args:
@@ -61,7 +60,7 @@ def build_index(entries: List[Tuple[str, str, dict]]) -> dict:
 	return idx
 
 
-def find_duplicates(entries: List[Tuple[str, str, dict]]) -> List[int]:
+def find_duplicates(entries: list[tuple[str, str, dict]]) -> list[int]:
 	"""Identify duplicate entries and return indices to drop (keeping the first).
 
 	Args:

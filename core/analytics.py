@@ -5,11 +5,10 @@ of bibliographic metadata entries (e.g., year ranges, author/journal counts,
 DOI coverage and simple histograms)."""
 
 from __future__ import annotations
-from typing import Dict, List, Tuple
 from collections import Counter
 
 
-def summarize(entries: List[Tuple[str, str, dict]]) -> Dict[str, object]:
+def summarize(entries: list[tuple[str, str, dict]]) -> dict[str, object]:
     """Summarize a list of metadata entries.
 
     Parameters
@@ -33,9 +32,9 @@ def summarize(entries: List[Tuple[str, str, dict]]) -> Dict[str, object]:
       digits are considered when parsing.
     - Authors are split on " and " to produce individual names.
     """
-    years: List[int] = []
-    authors: List[str] = []
-    journals: List[str] = []
+    years: list[int] = []
+    authors: list[str] = []
+    journals: list[str] = []
     doi_count = 0
     for _, _, meta in entries:
         m = meta.get("metadata", {})
@@ -65,7 +64,7 @@ def summarize(entries: List[Tuple[str, str, dict]]) -> Dict[str, object]:
 
 
 def create_simple_bar_chart(
-    data: Dict[str, int], title: str, max_items: int = 10
+    data: dict[str, int], title: str, max_items: int = 10
 ) -> str:
     """
     Generate a compact HTML snippet representing a simple horizontal bar chart.
@@ -97,7 +96,7 @@ def create_simple_bar_chart(
     return "\n".join(rows)
 
 
-def create_timeline_chart(years: List[int]) -> str:
+def create_timeline_chart(years: list[int]) -> str:
     """
     Create a small publication timeline chart as an HTML snippet.
 

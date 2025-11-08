@@ -21,13 +21,11 @@ keywords = [
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "Intended Audience :: Education", 
+    "Intended Audience :: Education",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -39,98 +37,98 @@ classifiers = [
     "Topic :: Utilities",
     "Typing :: Typed",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     # Core web framework
-    "streamlit>=1.28.0",
-    
-    # HTTP client for DOI resolution  
-    "requests>=2.25.0",
-    
-    # Type hints support (essential for <3.10)
-    "typing-extensions>=4.0.0",
+    "streamlit>=1.31.0",
+
+    # HTTP client for DOI resolution
+    "requests>=2.31.0",
+
+    # Type hints support for backports and Protocol
+    "typing-extensions>=4.9.0",
 ]
 
 [project.optional-dependencies]
 # Performance enhancement (5-10x speed improvement)
 performance = [
-    "aiohttp>=3.8.0",           # Async HTTP client for concurrent processing
+    "aiohttp>=3.9.0",           # Async HTTP client for concurrent processing
 ]
 
 # Complete testing suite
 test = [
-    "pytest>=7.0.0",           # Testing framework
-    "pytest-asyncio>=0.21.0",  # Async test support
-    "pytest-mock>=3.10.0",     # Mocking utilities
-    "pytest-cov>=4.0.0",       # Coverage reporting
-    "coverage>=7.0.0",         # Coverage analysis
+    "pytest>=8.0.0",           # Testing framework
+    "pytest-asyncio>=0.23.0",  # Async test support
+    "pytest-mock>=3.12.0",     # Mocking utilities
+    "pytest-cov>=4.1.0",       # Coverage reporting
+    "coverage[toml]>=7.4.0",   # Coverage analysis with TOML support
 ]
 
 # Code quality and development tools
 quality = [
-    "black>=22.0.0",           # Code formatting
-    "mypy>=1.0.0",             # Static type checking
-    "ruff>=0.1.0",             # Fast linting
-    "isort>=5.10.0",           # Import sorting
-    "bandit>=1.7.0",           # Security analysis
+    "black>=24.1.0",           # Code formatting
+    "mypy>=1.8.0",             # Static type checking
+    "ruff>=0.2.0",             # Fast linting
+    "isort>=5.13.0",           # Import sorting
+    "bandit[toml]>=1.7.6",     # Security analysis
 ]
 
 # Development environment (includes all optional dependencies)
 dev = [
     # Performance
-    "aiohttp>=3.8.0",
-    
+    "aiohttp>=3.9.0",
+
     # Testing
-    "pytest>=7.0.0",
-    "pytest-asyncio>=0.21.0", 
-    "pytest-mock>=3.10.0",
-    "pytest-cov>=4.0.0",
-    "coverage>=7.0.0",
-    
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-mock>=3.12.0",
+    "pytest-cov>=4.1.0",
+    "coverage[toml]>=7.4.0",
+
     # Code quality
-    "black>=22.0.0",
-    "mypy>=1.0.0", 
-    "ruff>=0.1.0",
-    "isort>=5.10.0",
-    "bandit>=1.7.0",
-    
+    "black>=24.1.0",
+    "mypy>=1.8.0",
+    "ruff>=0.2.0",
+    "isort>=5.13.0",
+    "bandit[toml]>=1.7.6",
+
     # Documentation
-    "sphinx>=5.0.0",
-    "sphinx-rtd-theme>=1.0.0",
-    
+    "sphinx>=7.2.0",
+    "sphinx-rtd-theme>=2.0.0",
+
     # Development utilities
-    "pre-commit>=2.20.0",
+    "pre-commit>=3.6.0",
     "jupyter>=1.0.0",
     "ipykernel>=6.0.0",
 ]
 
 # Production deployment
 production = [
-    "aiohttp>=3.8.0",          # Async processing for performance
-    "python-dotenv>=0.19.0",   # Environment variable management
-    "psutil>=5.8.0",           # System monitoring
+    "aiohttp>=3.9.0",          # Async processing for performance
+    "python-dotenv>=1.0.0",    # Environment variable management
+    "psutil>=5.9.0",           # System monitoring
 ]
 
 # All optional features combined
 all = [
-    "aiohttp>=3.8.0",
-    "pytest>=7.0.0",
-    "pytest-asyncio>=0.21.0",
-    "pytest-mock>=3.10.0", 
-    "pytest-cov>=4.0.0",
-    "coverage>=7.0.0",
-    "black>=22.0.0",
-    "mypy>=1.0.0",
-    "ruff>=0.1.0",
-    "isort>=5.10.0",
-    "bandit>=1.7.0",
-    "sphinx>=5.0.0",
-    "sphinx-rtd-theme>=1.0.0",
-    "pre-commit>=2.20.0",
+    "aiohttp>=3.9.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-mock>=3.12.0",
+    "pytest-cov>=4.1.0",
+    "coverage[toml]>=7.4.0",
+    "black>=24.1.0",
+    "mypy>=1.8.0",
+    "ruff>=0.2.0",
+    "isort>=5.13.0",
+    "bandit[toml]>=1.7.6",
+    "sphinx>=7.2.0",
+    "sphinx-rtd-theme>=2.0.0",
+    "pre-commit>=3.6.0",
     "jupyter>=1.0.0",
     "ipykernel>=6.0.0",
-    "python-dotenv>=0.19.0",
-    "psutil>=5.8.0",
+    "python-dotenv>=1.0.0",
+    "psutil>=5.9.0",
 ]
 
 [project.urls]
@@ -222,7 +220,7 @@ directory = "htmlcov"               # HTML report directory
 title = "DOI2BibTex V2 Coverage Report"
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 strict = true                       # Enable all strict checks
 warn_return_any = true              # Warn on Any returns
 warn_unused_configs = true          # Warn on unused config
@@ -258,7 +256,7 @@ disallow_untyped_defs = false       # Tests can be less strict
 warn_no_return = false              # Test functions don't need returns
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py310"
 line-length = 88
 select = [
     "E",  # pycodestyle errors
@@ -279,7 +277,7 @@ ignore = [
 "tests/**/*" = ["E501", "F401", "F811"]
 
 [tool.black]
-target-version = ["py38"]
+target-version = ["py310", "py311", "py312"]
 line-length = 88
 include = '\.pyi?$'
 extend-exclude = '''
@@ -300,3 +298,10 @@ extend-exclude = '''
 profile = "black"
 multi_line_output = 3
 line_length = 88
+
+[tool.bandit]
+exclude_dirs = ["tests", "old_v1", ".venv", "venv"]
+skips = []
+
+[tool.bandit.assert_used]
+skips = ["*/test_*.py", "*/tests/*.py"]
