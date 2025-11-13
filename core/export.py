@@ -20,8 +20,7 @@ def order_bibtex_fields(bibtex: str, field_order: List[str]) -> str:
     - This implementation is a naive parser: it expects fields of the form `name = {value}`
       and will not reliably handle nested braces inside values or alternate quoting styles.
     - The function preserves field values but may normalize spacing and braces.
-    - Intended for straightforward entries; see the patched `order_bibtex_fields` below
-      for a more robust implementation.
+    - Handles special formatting: DOI/ISSN uppercase, month without braces.
     """
     fields = re.findall(r"(\w+)\s*=\s*\{([^}]*)\}", bibtex)
     d = dict(fields)
@@ -30,14 +29,35 @@ def order_bibtex_fields(bibtex: str, field_order: List[str]) -> str:
     entry_type = entry_type.group(1) if entry_type else "article"
     key = key.group(1) if key else "ref"
 
+    # Build ordered fields list with case-insensitive matching
+    field_order_lower = [f.lower() for f in field_order]
+    field_map = {k.lower(): k for k, v in fields}  # Map lowercase to original case
+
     ordered = []
-    for f in field_order:
-        if f in d:
-            ordered.append((f, d[f]))
-    rest = [(k, v) for k, v in fields if k not in field_order]
+    for target_field in field_order:
+        target_lower = target_field.lower()
+        # Find the field in the dict (case-insensitive)
+        for actual_field, value in fields:
+            if actual_field.lower() == target_lower:
+                # Use the target field name (which may be DOI, ISSN, etc.)
+                ordered.append((target_field, value))
+                break
+
+    # Add remaining fields not in field_order
+    rest = [(k, v) for k, v in fields if k.lower() not in field_order_lower]
     ordered.extend(rest)
 
-    body = ",\n".join([f"  {k} = {{{v}}}" for k, v in ordered])
+    # Format fields with special handling for month
+    formatted_fields = []
+    for k, v in ordered:
+        if k.lower() == 'month':
+            # Month without braces
+            formatted_fields.append(f"  {k} = {v}")
+        else:
+            # Normal field with braces
+            formatted_fields.append(f"  {k} = {{{v}}}")
+
+    body = ",\n".join(formatted_fields)
     return f"@{entry_type}{{{key},\n{body}\n}}"
 
 

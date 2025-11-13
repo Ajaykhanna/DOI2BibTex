@@ -14,15 +14,17 @@ import streamlit as st
 
 DEFAULT_FIELD_ORDER = [
     "title",
-    "author", 
+    "author",
     "journal",
     "volume",
     "number",
     "pages",
     "year",
     "publisher",
-    "doi",
-    "abstract",
+    "DOI",
+    "ISSN",
+    "url",
+    "month",
 ]
 
 ThemeType = Literal["light", "gray", "dark"]

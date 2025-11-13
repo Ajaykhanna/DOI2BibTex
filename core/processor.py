@@ -31,7 +31,12 @@ from .analytics import summarize
 logger = logging.getLogger(__name__)
 
 # Constants
-DOI_BASE = "https://doi.org/"
+# Multiple DOI resolution sources (try in order)
+DOI_SOURCES = [
+    ("Crossref", "https://api.crossref.org/works/{doi}/transform/application/x-bibtex"),
+    ("DataCite", "https://api.datacite.org/application/x-bibtex/{doi}"),
+    ("DOI.org", "https://doi.org/{doi}"),
+]
 CROSSREF_JSON = "https://api.crossref.org/works/"
 APP_EMAIL = "akhanna2@ucmerced.edu"
 
@@ -131,43 +136,63 @@ class DOIProcessor:
             NetworkError: When network request fails
         """
         logger.info(f"Fetching BibTeX for DOI: {doi}")
-        
+
         metadata: Dict[str, Any] = {"doi": doi, "status": "processing"}
-        
-        # Fetch BibTeX from DOI resolver
-        url = DOI_BASE + doi
-        resp, err = get_with_retry(
-            url, 
-            polite_headers(APP_EMAIL), 
-            timeout=self.config.timeout, 
-            max_retries=self.config.max_retries
-        )
-        
-        if err or not resp:
-            error_msg = err or "Request failed"
-            logger.error(f"DOI fetch failed for {doi}: {error_msg}")
-            raise NetworkError(error_msg, doi)
-        
-        if resp.status_code == 404:
+
+        # Step 1: Try multiple sources for BibTeX
+        bib_content, source_used = self._try_multiple_sources(doi)
+
+        if not bib_content:
             raise DOINotFoundError(doi)
-        elif resp.status_code != 200:
-            raise NetworkError(f"HTTP {resp.status_code}", doi, resp.status_code)
-        
-        # Decode response content
-        try:
-            bib_content = resp.content.decode("utf-8", errors="replace")
-        except Exception as e:
-            raise NetworkError(f"Failed to decode response: {e}", doi)
-        
-        if "@" not in bib_content:
-            raise DOIError("No BibTeX content in response", doi)
-        
-        # Extract and enrich BibTeX fields
+
+        metadata["source"] = source_used
+        logger.info(f"Using BibTeX from {source_used}")
+
+        # Step 2: Extract BibTeX fields
         fields = extract_bibtex_fields(bib_content)
-        
-        # Fetch additional data from Crossref if needed
-        if self.config.fetch_abstracts or self.config.use_abbrev_journal:
-            fields = self._enrich_with_crossref(doi, fields)
+
+        # Step 3: Get Crossref data for enrichment (pages, ISSN, url, month, abstracts)
+        crossref_message = None
+        needs_crossref = (
+            self.config.fetch_abstracts or
+            self.config.use_abbrev_journal or
+            "pages" not in fields
+        )
+
+        if needs_crossref:
+            try:
+                json_data, error = get_json_with_retry(
+                    CROSSREF_JSON + doi,
+                    polite_headers(APP_EMAIL),
+                    timeout=self.config.timeout,
+                    max_retries=self.config.max_retries
+                )
+
+                if json_data and not error and "message" in json_data:
+                    crossref_message = json_data["message"]
+
+                    # Extract abstract if requested
+                    if self.config.fetch_abstracts:
+                        abstract_jats = crossref_message.get("abstract")
+                        if abstract_jats:
+                            abstract_clean = re.sub(r"<[^>]+>", "", abstract_jats).strip()
+                            fields["abstract"] = abstract_clean
+
+                    # Extract journal information
+                    self._extract_journal_info(crossref_message, fields)
+
+            except Exception as e:
+                logger.warning(f"Crossref data fetch error for {doi}: {e}")
+
+        # Step 4: Add missing pages from Crossref if needed
+        if "pages" not in fields:
+            pages = self._extract_pages_from_crossref_json(doi)
+            if pages:
+                bib_content = self._add_pages_to_bibtex(bib_content, pages)
+                fields["pages"] = pages
+
+        # Step 5: Enrich with additional fields (ISSN, url, month)
+        fields = self._enrich_with_additional_fields(doi, fields, crossref_message)
         
         # Normalize author names if requested
         if self.config.normalize_authors and "author" in fields:
@@ -203,7 +228,150 @@ class DOIProcessor:
             content=bib_content,
             metadata=metadata
         )
-    
+
+    def _try_multiple_sources(self, doi: str) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Try fetching BibTeX from multiple sources in order of preference.
+
+        Args:
+            doi: DOI string to fetch
+
+        Returns:
+            (bibtex_content, source_name) on success, (None, None) if all fail
+        """
+        for source_name, url_template in DOI_SOURCES:
+            url = url_template.format(doi=doi)
+            logger.info(f"Trying {source_name} for DOI: {doi}")
+
+            try:
+                resp, err = get_with_retry(
+                    url,
+                    polite_headers(APP_EMAIL),
+                    timeout=self.config.timeout,
+                    max_retries=self.config.max_retries
+                )
+
+                if resp and resp.status_code == 200:
+                    bibtex = resp.content.decode("utf-8", errors="replace")
+                    if "@" in bibtex:  # Valid BibTeX marker
+                        logger.info(f"✓ Successfully fetched from {source_name}")
+                        return bibtex, source_name
+                    else:
+                        logger.warning(f"✗ {source_name} returned invalid BibTeX")
+                else:
+                    status = resp.status_code if resp else "no response"
+                    logger.warning(f"✗ {source_name} failed: {err or f'HTTP {status}'}")
+
+            except Exception as e:
+                logger.warning(f"✗ {source_name} error: {e}")
+                continue
+
+        return None, None
+
+    def _extract_pages_from_crossref_json(self, doi: str) -> Optional[str]:
+        """
+        Extract page numbers from Crossref JSON API if missing from BibTeX.
+
+        Args:
+            doi: DOI string
+
+        Returns:
+            Page number string or None
+        """
+        try:
+            json_data, error = get_json_with_retry(
+                CROSSREF_JSON + doi,
+                polite_headers(APP_EMAIL),
+                timeout=self.config.timeout,
+                max_retries=self.config.max_retries
+            )
+
+            if error or not json_data:
+                return None
+
+            message = json_data.get('message', {})
+
+            # Try different field names for pages
+            for field in ['page', 'pages', 'article-number']:
+                if field in message and message[field]:
+                    logger.info(f"Extracted pages from Crossref: {message[field]}")
+                    return str(message[field])
+
+        except Exception as e:
+            logger.warning(f"Error extracting pages from Crossref: {e}")
+
+        return None
+
+    def _add_pages_to_bibtex(self, bib_content: str, pages: str) -> str:
+        """
+        Add pages field to BibTeX entry if not present.
+
+        Args:
+            bib_content: BibTeX content
+            pages: Page number string
+
+        Returns:
+            Updated BibTeX content
+        """
+        # Check if pages already exist
+        if re.search(r'\bpages\s*=', bib_content, re.IGNORECASE):
+            return bib_content
+
+        # Add pages field before closing brace
+        if bib_content.strip().endswith('}'):
+            bib_content = bib_content.strip()[:-1]
+            bib_content += f",\n  pages = {{{pages}}}\n}}"
+
+        return bib_content
+
+    def _enrich_with_additional_fields(
+        self,
+        doi: str,
+        fields: Dict[str, Any],
+        crossref_message: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Enrich BibTeX fields with ISSN, url, and month from Crossref data.
+
+        Args:
+            doi: DOI string
+            fields: Current fields dictionary
+            crossref_message: Optional Crossref message data
+
+        Returns:
+            Enriched fields dictionary
+        """
+        if not crossref_message:
+            # Minimal enrichment with just URL
+            if 'url' not in fields:
+                fields['url'] = f"http://dx.doi.org/{doi}"
+            return fields
+
+        # Extract ISSN
+        if 'ISSN' in crossref_message and crossref_message['ISSN']:
+            issn_list = crossref_message['ISSN']
+            if isinstance(issn_list, list) and issn_list:
+                fields['ISSN'] = issn_list[0]
+
+        # Extract URL
+        if 'URL' in crossref_message:
+            fields['url'] = crossref_message['URL']
+        else:
+            fields['url'] = f"http://dx.doi.org/{doi}"
+
+        # Extract month from publication date
+        published = crossref_message.get('published-print') or crossref_message.get('published-online')
+        if published and 'date-parts' in published:
+            date_parts = published['date-parts'][0]
+            if len(date_parts) >= 2 and date_parts[1]:
+                month_num = date_parts[1]
+                months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
+                         'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+                if 1 <= month_num <= 12:
+                    fields['month'] = months[month_num - 1]
+
+        return fields
+
     def _enrich_with_crossref(self, doi: str, fields: Dict[str, Any]) -> Dict[str, Any]:
         """Enrich BibTeX fields with Crossref JSON data."""
         try:
