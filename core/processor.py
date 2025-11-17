@@ -63,9 +63,11 @@ class ProcessingResult:
 
 class DOIProcessor:
     """Service class for processing DOIs into BibTeX entries."""
-    
+
     def __init__(self, config: AppConfig):
         self.config = config
+        self._used_keys: set[str] = set()  # Track citation keys to prevent duplicates
+        self._crossref_cache: dict[str, dict] = {}  # Cache for Crossref JSON responses
         
     @handle_exception
     def parse_input(self, raw_text: str, uploaded_file=None) -> List[str]:
@@ -119,8 +121,7 @@ class DOIProcessor:
             logger.info(f"Extracted {len(cleaned)} valid DOIs")
         
         return cleaned
-    
-    @handle_exception
+
     def fetch_bibtex(self, doi: str) -> BibtexEntry:
         """
         Fetch a single BibTeX entry for a DOI.
@@ -161,16 +162,25 @@ class DOIProcessor:
 
         if needs_crossref:
             try:
-                json_data, error = get_json_with_retry(
-                    CROSSREF_JSON + doi,
-                    polite_headers(APP_EMAIL),
-                    timeout=self.config.timeout,
-                    max_retries=self.config.max_retries
-                )
+                # Check cache first
+                if doi in self._crossref_cache:
+                    logger.debug(f"Using cached Crossref data for {doi}")
+                    crossref_message = self._crossref_cache[doi]
+                else:
+                    json_data, error = get_json_with_retry(
+                        CROSSREF_JSON + doi,
+                        polite_headers(APP_EMAIL),
+                        timeout=self.config.timeout,
+                        max_retries=self.config.max_retries
+                    )
 
-                if json_data and not error and "message" in json_data:
-                    crossref_message = json_data["message"]
+                    if json_data and not error and "message" in json_data:
+                        crossref_message = json_data["message"]
+                        # Cache the result
+                        self._crossref_cache[doi] = crossref_message
+                        logger.debug(f"Cached Crossref data for {doi}")
 
+                if crossref_message:
                     # Extract abstract if requested
                     if self.config.fetch_abstracts:
                         abstract_jats = crossref_message.get("abstract")
@@ -200,8 +210,9 @@ class DOIProcessor:
         
         # Generate and update citation key
         base_key = make_key(fields, self.config.key_pattern)
-        citation_key = disambiguate(base_key, set())  # TODO: Pass existing keys
-        
+        citation_key = disambiguate(base_key, self._used_keys)
+        self._used_keys.add(citation_key)
+
         old_key = fields.get("key", "")
         if old_key and old_key != citation_key:
             bib_content = safe_replace_key(bib_content, old_key, citation_key)
@@ -279,17 +290,23 @@ class DOIProcessor:
             Page number string or None
         """
         try:
-            json_data, error = get_json_with_retry(
-                CROSSREF_JSON + doi,
-                polite_headers(APP_EMAIL),
-                timeout=self.config.timeout,
-                max_retries=self.config.max_retries
-            )
+            # Check cache first
+            if doi in self._crossref_cache:
+                message = self._crossref_cache[doi]
+            else:
+                json_data, error = get_json_with_retry(
+                    CROSSREF_JSON + doi,
+                    polite_headers(APP_EMAIL),
+                    timeout=self.config.timeout,
+                    max_retries=self.config.max_retries
+                )
 
-            if error or not json_data:
-                return None
+                if error or not json_data:
+                    return None
 
-            message = json_data.get('message', {})
+                message = json_data.get('message', {})
+                # Cache the result
+                self._crossref_cache[doi] = message
 
             # Try different field names for pages
             for field in ['page', 'pages', 'article-number']:
@@ -496,7 +513,10 @@ class DOIProcessor:
             )
         
         logger.info(f"Processing batch of {len(dois)} DOIs")
-        
+
+        # Reset citation key tracking for this batch
+        self._used_keys.clear()
+
         entries: List[BibtexEntry] = []
         failed_dois: List[str] = []
         
