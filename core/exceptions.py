@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import streamlit as st
 from typing import Optional, Any
+from datetime import datetime
 import logging
 
 
@@ -17,49 +18,92 @@ logger = logging.getLogger(__name__)
 
 
 class DOIError(Exception):
-    """Base exception for DOI-related errors."""
-    
-    def __init__(self, message: str, doi: Optional[str] = None, details: Optional[str] = None):
+    """Base exception for DOI-related errors with enhanced context tracking."""
+
+    def __init__(
+        self,
+        message: str,
+        doi: Optional[str] = None,
+        details: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
         self.message = message
         self.doi = doi
         self.details = details
+        self.context = context or {}
+        self.timestamp = datetime.now()
         super().__init__(message)
-    
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Serialize error to dictionary for logging and API responses.
+
+        Returns:
+            Dictionary with error details including type, message, DOI, details, context, and timestamp
+        """
+        return {
+            "error": self.__class__.__name__,
+            "message": self.message,
+            "doi": self.doi,
+            "details": self.details,
+            "context": self.context,
+            "timestamp": self.timestamp.isoformat()
+        }
+
     def display_error(self) -> None:
         """Display user-friendly error message in Streamlit."""
         if self.doi:
             st.error(f"**DOI Error ({self.doi}):** {self.message}")
         else:
             st.error(f"**DOI Error:** {self.message}")
-            
+
         if self.details:
             st.caption(f"Details: {self.details}")
+
+        # Display context if in debug mode (could be controlled by config)
+        if self.context and logger.isEnabledFor(logging.DEBUG):
+            with st.expander("Debug Context"):
+                st.json(self.context)
 
 
 class InvalidDOIError(DOIError):
     """Raised when DOI format is invalid."""
-    
-    def __init__(self, doi: str, reason: Optional[str] = None):
+
+    def __init__(
+        self,
+        doi: str,
+        reason: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
         message = f"Invalid DOI format"
         details = reason if reason else "DOI does not match expected pattern"
-        super().__init__(message, doi, details)
+        super().__init__(message, doi, details, context)
 
 
 class DOINotFoundError(DOIError):
     """Raised when DOI is not found or returns 404."""
-    
-    def __init__(self, doi: str):
+
+    def __init__(self, doi: str, context: Optional[dict[str, Any]] = None):
         message = "DOI not found"
         details = "The DOI may be invalid, not yet indexed, or temporarily unavailable"
-        super().__init__(message, doi, details)
+        super().__init__(message, doi, details, context)
 
 
 class NetworkError(DOIError):
     """Raised when network requests fail."""
-    
-    def __init__(self, message: str, doi: Optional[str] = None, status_code: Optional[int] = None):
+
+    def __init__(
+        self,
+        message: str,
+        doi: Optional[str] = None,
+        status_code: Optional[int] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
         details = None
+        ctx = context or {}
+
         if status_code:
+            ctx["status_code"] = status_code
             if status_code == 429:
                 details = "Too many requests - please wait and try again with smaller batches"
             elif status_code >= 500:
@@ -68,38 +112,74 @@ class NetworkError(DOIError):
                 details = "Access forbidden - check DOI permissions"
             else:
                 details = f"HTTP error code: {status_code}"
-                
-        super().__init__(message, doi, details)
+
+        super().__init__(message, doi, details, ctx)
 
 
 class FileProcessingError(Exception):
     """Raised when file processing fails."""
-    
-    def __init__(self, message: str, filename: Optional[str] = None, details: Optional[str] = None):
+
+    def __init__(
+        self,
+        message: str,
+        filename: Optional[str] = None,
+        details: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
         self.message = message
         self.filename = filename
         self.details = details
+        self.context = context or {}
+        self.timestamp = datetime.now()
         super().__init__(message)
-    
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize error to dictionary for logging and API responses."""
+        return {
+            "error": self.__class__.__name__,
+            "message": self.message,
+            "filename": self.filename,
+            "details": self.details,
+            "context": self.context,
+            "timestamp": self.timestamp.isoformat()
+        }
+
     def display_error(self) -> None:
         """Display user-friendly error message in Streamlit."""
         if self.filename:
             st.error(f"**File Error ({self.filename}):** {self.message}")
         else:
             st.error(f"**File Error:** {self.message}")
-            
+
         if self.details:
             st.caption(f"Details: {self.details}")
 
 
 class ConfigurationError(Exception):
     """Raised when configuration is invalid."""
-    
-    def __init__(self, message: str, field: Optional[str] = None):
+
+    def __init__(
+        self,
+        message: str,
+        field: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
         self.message = message
         self.field = field
+        self.context = context or {}
+        self.timestamp = datetime.now()
         super().__init__(message)
-    
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize error to dictionary for logging and API responses."""
+        return {
+            "error": self.__class__.__name__,
+            "message": self.message,
+            "field": self.field,
+            "context": self.context,
+            "timestamp": self.timestamp.isoformat()
+        }
+
     def display_error(self) -> None:
         """Display user-friendly error message in Streamlit."""
         if self.field:
@@ -110,18 +190,40 @@ class ConfigurationError(Exception):
 
 class BatchProcessingError(Exception):
     """Raised when batch processing encounters issues."""
-    
-    def __init__(self, message: str, processed_count: int, total_count: int, failed_dois: list[str]):
+
+    def __init__(
+        self,
+        message: str,
+        processed_count: int,
+        total_count: int,
+        failed_dois: list[str],
+        context: Optional[dict[str, Any]] = None
+    ):
         self.message = message
         self.processed_count = processed_count
         self.total_count = total_count
         self.failed_dois = failed_dois
+        self.context = context or {}
+        self.timestamp = datetime.now()
         super().__init__(message)
-    
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize error to dictionary for logging and API responses."""
+        return {
+            "error": self.__class__.__name__,
+            "message": self.message,
+            "processed_count": self.processed_count,
+            "total_count": self.total_count,
+            "failed_count": len(self.failed_dois),
+            "failed_dois": self.failed_dois,
+            "context": self.context,
+            "timestamp": self.timestamp.isoformat()
+        }
+
     def display_error(self) -> None:
         """Display user-friendly error message in Streamlit."""
         st.error(f"**Batch Processing Error:** {self.message}")
-        
+
         if self.failed_dois:
             with st.expander(f"Failed DOIs ({len(self.failed_dois)})"):
                 for doi in self.failed_dois:

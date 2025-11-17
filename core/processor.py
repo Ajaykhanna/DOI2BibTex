@@ -141,12 +141,13 @@ class DOIProcessor:
         metadata: Dict[str, Any] = {"doi": doi, "status": "processing"}
 
         # Step 1: Try multiple sources for BibTeX
-        bib_content, source_used = self._try_multiple_sources(doi)
+        bib_content, source_used, fetch_context = self._try_multiple_sources(doi)
 
         if not bib_content:
-            raise DOINotFoundError(doi)
+            raise DOINotFoundError(doi, context=fetch_context)
 
         metadata["source"] = source_used
+        metadata["fetch_context"] = fetch_context
         logger.info(f"Using BibTeX from {source_used}")
 
         # Step 2: Extract BibTeX fields
@@ -240,7 +241,7 @@ class DOIProcessor:
             metadata=metadata
         )
 
-    def _try_multiple_sources(self, doi: str) -> Tuple[Optional[str], Optional[str]]:
+    def _try_multiple_sources(self, doi: str) -> Tuple[Optional[str], Optional[str], dict]:
         """
         Try fetching BibTeX from multiple sources in order of preference.
 
@@ -248,8 +249,10 @@ class DOIProcessor:
             doi: DOI string to fetch
 
         Returns:
-            (bibtex_content, source_name) on success, (None, None) if all fail
+            (bibtex_content, source_name, context_dict) on success or failure
         """
+        source_failures = {}  # Track failures for error context
+
         for source_name, url_template in DOI_SOURCES:
             url = url_template.format(doi=doi)
             logger.info(f"Trying {source_name} for DOI: {doi}")
@@ -266,18 +269,33 @@ class DOIProcessor:
                     bibtex = resp.content.decode("utf-8", errors="replace")
                     if "@" in bibtex:  # Valid BibTeX marker
                         logger.info(f"✓ Successfully fetched from {source_name}")
-                        return bibtex, source_name
+                        context = {
+                            "source": source_name,
+                            "url": url,
+                            "sources_tried": list(source_failures.keys())
+                        }
+                        return bibtex, source_name, context
                     else:
+                        source_failures[source_name] = "Invalid BibTeX response"
                         logger.warning(f"✗ {source_name} returned invalid BibTeX")
                 else:
                     status = resp.status_code if resp else "no response"
-                    logger.warning(f"✗ {source_name} failed: {err or f'HTTP {status}'}")
+                    source_failures[source_name] = err or f"HTTP {status}"
+                    logger.warning(f"✗ {source_name} failed: {source_failures[source_name]}")
 
             except Exception as e:
+                source_failures[source_name] = str(e)
                 logger.warning(f"✗ {source_name} error: {e}")
                 continue
 
-        return None, None
+        # All sources failed - return context with all failures
+        context = {
+            "sources_tried": list(DOI_SOURCES),
+            "source_failures": source_failures,
+            "timeout": self.config.timeout,
+            "max_retries": self.config.max_retries
+        }
+        return None, None, context
 
     def _extract_pages_from_crossref_json(self, doi: str) -> Optional[str]:
         """
@@ -535,14 +553,26 @@ class DOIProcessor:
                     time.sleep(0.1)
                     
             except Exception as e:
-                logger.error(f"Failed to process DOI {doi}: {e}")
+                # Enhanced error logging with context
+                if hasattr(e, 'to_dict'):
+                    # Custom exception with structured data
+                    error_data = e.to_dict()
+                    logger.error(f"Failed to process DOI {doi}: {e}", extra={"error_context": error_data})
+                else:
+                    # Generic exception
+                    logger.error(f"Failed to process DOI {doi}: {e}")
+
                 failed_dois.append(doi)
-                
-                # Create error entry
+
+                # Create error entry with context if available
+                error_metadata = {"doi": doi, "status": "error", "error": str(e)}
+                if hasattr(e, 'to_dict'):
+                    error_metadata["error_details"] = e.to_dict()
+
                 error_entry = BibtexEntry(
                     key="unknown",
                     content=f"Error: {doi} → {str(e)}",
-                    metadata={"doi": doi, "status": "error", "error": str(e)}
+                    metadata=error_metadata
                 )
                 entries.append(error_entry)
                 
