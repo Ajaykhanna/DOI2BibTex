@@ -36,6 +36,12 @@ from .logging_config import get_logger
 logger = get_logger("async_processor")
 
 # Constants
+# Multiple DOI resolution sources (try in order)
+DOI_SOURCES = [
+    ("Crossref", "https://api.crossref.org/works/{doi}/transform/application/x-bibtex"),
+    ("DataCite", "https://api.datacite.org/application/x-bibtex/{doi}"),
+    ("DOI.org", "https://doi.org/{doi}"),
+]
 DOI_BASE = "https://doi.org/"
 CROSSREF_JSON = "https://api.crossref.org/works/"
 APP_EMAIL = "akhanna2@ucmerced.edu"
@@ -73,10 +79,13 @@ class AsyncDOIProcessor:
                 "aiohttp is required for async processing. "
                 "Install with: pip install aiohttp"
             )
-        
+
         self.config = config
         self.session: Optional[aiohttp.ClientSession] = None
         self._semaphore: Optional[asyncio.Semaphore] = None
+        self._used_keys: set[str] = set()  # Track citation keys to prevent duplicates
+        self._key_lock: Optional[asyncio.Lock] = None  # Lock for thread-safe key generation
+        self._crossref_cache: dict[str, dict] = {}  # Cache for Crossref JSON responses
         
     async def __aenter__(self):
         """Async context manager entry."""
@@ -194,22 +203,57 @@ class AsyncDOIProcessor:
                     return None, error_msg
         
         return None, "Max retries exceeded"
-    
+
+    async def _try_multiple_sources_async(self, doi: DOI) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Try fetching BibTeX from multiple sources in order of preference.
+
+        Args:
+            doi: DOI string to fetch
+
+        Returns:
+            (bibtex_content, source_name) on success, (None, None) if all fail
+        """
+        for source_name, url_template in DOI_SOURCES:
+            url = url_template.format(doi=doi)
+            logger.info(f"Trying {source_name} for DOI: {doi}")
+
+            try:
+                bib_content, error = await self._fetch_with_retry(url)
+
+                if not error and bib_content and "@" in bib_content:
+                    logger.info(f"✓ Successfully fetched from {source_name}")
+                    return bib_content, source_name
+                else:
+                    logger.debug(f"✗ {source_name} failed: {error or 'No valid BibTeX'}")
+
+            except Exception as e:
+                logger.debug(f"✗ {source_name} error: {e}")
+                continue
+
+        logger.warning(f"All sources failed for DOI: {doi}")
+        return None, None
+
     async def _enrich_with_crossref(self, doi: DOI, fields: Dict[str, Any]) -> Dict[str, Any]:
         """Enrich BibTeX fields with Crossref JSON data asynchronously."""
-        if not (self.config.fetch_abstracts or self.config.use_abbrev_journal):
-            return fields
-        
         try:
-            crossref_url = CROSSREF_JSON + doi
-            json_data, error = await self._fetch_with_retry(crossref_url, json_response=True)
-            
-            if error or not json_data or "message" not in json_data:
-                logger.warning(f"Crossref enrichment failed for {doi}: {error}")
-                return fields
-            
-            message = json_data["message"]
-            
+            # Check cache first
+            if doi in self._crossref_cache:
+                logger.debug(f"Using cached Crossref data for {doi}")
+                message = self._crossref_cache[doi]
+            else:
+                crossref_url = CROSSREF_JSON + doi
+                json_data, error = await self._fetch_with_retry(crossref_url, json_response=True)
+
+                if error or not json_data or "message" not in json_data:
+                    logger.warning(f"Crossref enrichment failed for {doi}: {error}")
+                    return fields
+
+                message = json_data["message"]
+                # Cache the result
+                self._crossref_cache[doi] = message
+                logger.debug(f"Cached Crossref data for {doi}")
+
             # Extract abstract if requested
             if self.config.fetch_abstracts:
                 abstract_jats = message.get("abstract")
@@ -218,15 +262,42 @@ class AsyncDOIProcessor:
                     # Remove JATS XML tags
                     abstract_clean = re.sub(r"<[^>]+>", "", abstract_jats).strip()
                     fields["abstract"] = abstract_clean
-            
+
             # Extract journal information
             self._extract_journal_info(message, fields)
-            
+
+            # Extract ISSN
+            if "ISSN" in message and message["ISSN"]:
+                fields["ISSN"] = message["ISSN"][0]
+
+            # Extract URL (prefer DOI-based URL)
+            fields["url"] = message.get("URL", f"http://dx.doi.org/{doi}")
+
+            # Extract month from publication date
+            published = message.get("published-print") or message.get("published-online")
+            if published and "date-parts" in published and published["date-parts"]:
+                date_parts = published["date-parts"][0]
+                if len(date_parts) >= 2:
+                    month_num = date_parts[1]
+                    months = [
+                        "jan", "feb", "mar", "apr", "may", "jun",
+                        "jul", "aug", "sep", "oct", "nov", "dec"
+                    ]
+                    if 1 <= month_num <= 12:
+                        fields["month"] = months[month_num - 1]
+
+            # Extract pages if missing
+            if "pages" not in fields:
+                for field in ["page", "pages", "article-number"]:
+                    if field in message and message[field]:
+                        fields["pages"] = str(message[field])
+                        break
+
             logger.debug(f"Successfully enriched {doi} with Crossref data")
-            
+
         except Exception as e:
             logger.warning(f"Crossref enrichment error for {doi}: {e}")
-        
+
         return fields
     
     def _extract_journal_info(self, crossref_message: Dict[str, Any], fields: Dict[str, Any]) -> None:
@@ -286,20 +357,16 @@ class AsyncDOIProcessor:
             NetworkError: When network request fails
         """
         logger.debug(f"Fetching BibTeX for DOI: {doi}")
-        
+
         metadata: Dict[str, Any] = {"doi": doi, "status": "processing"}
-        
-        # Fetch BibTeX from DOI resolver
-        url = DOI_BASE + doi
-        bib_content, error = await self._fetch_with_retry(url)
-        
-        if error:
-            if "not found" in error.lower():
-                raise DOINotFoundError(doi)
-            else:
-                raise NetworkError(error, doi)
-        
-        if not bib_content or "@" not in bib_content:
+
+        # Step 1: Try fetching BibTeX from multiple sources
+        bib_content, source_used = await self._try_multiple_sources_async(doi)
+
+        if not bib_content:
+            raise DOINotFoundError(doi)
+
+        if "@" not in bib_content:
             raise DOIError("No BibTeX content in response", doi)
         
         # Extract and enrich BibTeX fields
@@ -313,10 +380,13 @@ class AsyncDOIProcessor:
             import re
             fields["author"] = re.sub(r"\s+", " ", fields["author"]).strip()
         
-        # Generate and update citation key
+        # Generate and update citation key (thread-safe)
         base_key = make_key(fields, self.config.key_pattern)
-        citation_key = disambiguate(base_key, set())  # TODO: Pass existing keys
-        
+
+        async with self._key_lock:
+            citation_key = disambiguate(base_key, self._used_keys)
+            self._used_keys.add(citation_key)
+
         old_key = fields.get("key", "")
         if old_key and old_key != citation_key:
             bib_content = safe_replace_key(bib_content, old_key, citation_key)
@@ -396,7 +466,11 @@ class AsyncDOIProcessor:
         
         logger.info(f"Starting async batch processing of {len(dois)} DOIs")
         start_time = time.perf_counter()
-        
+
+        # Reset citation key tracking for this batch
+        self._used_keys.clear()
+        self._key_lock = asyncio.Lock()
+
         entries: List[BibtexEntry] = []
         failed_dois: List[DOI] = []
         completed_count = 0
