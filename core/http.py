@@ -1,10 +1,233 @@
 from __future__ import annotations
 import time
+import asyncio
+import threading
 from typing import Dict, Optional, Tuple
 import requests
+import logging
+
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
 DEFAULT_MAX_RETRIES = 3
+
+
+class RateLimiter:
+    """
+    Token bucket rate limiter for synchronous operations.
+
+    Implements the token bucket algorithm to limit the rate of API requests.
+    This helps prevent hitting API rate limits and ensures polite API usage.
+
+    Features:
+    - Thread-safe operations
+    - Configurable rate and time window
+    - Automatic token replenishment
+    - Blocking wait() method
+    - Non-blocking acquire() method
+
+    Example:
+        >>> limiter = RateLimiter(rate=50, per=60)  # 50 requests per 60 seconds
+        >>> limiter.wait()  # Blocks until a token is available
+        >>> # Make API request
+        >>> response = requests.get(url)
+    """
+
+    def __init__(self, rate: int = 50, per: int = 60):
+        """
+        Initialize rate limiter.
+
+        Args:
+            rate: Number of requests allowed
+            per: Time window in seconds (default 60 = 1 minute)
+        """
+        self.rate = rate
+        self.per = per
+        self.allowance = float(rate)  # Current token allowance
+        self.last_check = time.monotonic()
+        self.lock = threading.RLock()
+
+        logger.info(f"RateLimiter initialized: {rate} requests per {per}s")
+
+    def acquire(self) -> bool:
+        """
+        Try to acquire a token (non-blocking).
+
+        Returns:
+            True if token was acquired, False if rate limit would be exceeded
+        """
+        with self.lock:
+            current = time.monotonic()
+            elapsed = current - self.last_check
+            self.last_check = current
+
+            # Replenish tokens based on elapsed time
+            self.allowance += elapsed * (self.rate / self.per)
+
+            # Cap at maximum rate
+            if self.allowance > self.rate:
+                self.allowance = self.rate
+
+            # Try to consume a token
+            if self.allowance < 1.0:
+                return False
+
+            self.allowance -= 1.0
+            return True
+
+    def wait(self, timeout: Optional[float] = None) -> bool:
+        """
+        Block until a token is available (blocking).
+
+        Args:
+            timeout: Maximum time to wait in seconds (None = wait forever)
+
+        Returns:
+            True if token was acquired, False if timeout occurred
+        """
+        start_time = time.monotonic()
+
+        while not self.acquire():
+            if timeout and (time.monotonic() - start_time) >= timeout:
+                return False
+            time.sleep(0.1)  # Sleep briefly to avoid busy-waiting
+
+        return True
+
+    def reset(self) -> None:
+        """Reset the rate limiter to full allowance."""
+        with self.lock:
+            self.allowance = float(self.rate)
+            self.last_check = time.monotonic()
+            logger.debug("RateLimiter reset")
+
+    def get_wait_time(self) -> float:
+        """
+        Calculate estimated wait time for next token.
+
+        Returns:
+            Estimated seconds until next token is available
+        """
+        with self.lock:
+            if self.allowance >= 1.0:
+                return 0.0
+
+            # Calculate time needed to replenish one token
+            tokens_needed = 1.0 - self.allowance
+            time_per_token = self.per / self.rate
+            return tokens_needed * time_per_token
+
+
+class AsyncRateLimiter:
+    """
+    Async token bucket rate limiter for asynchronous operations.
+
+    Features:
+    - Async/await support
+    - Asyncio-safe operations
+    - Same token bucket algorithm as RateLimiter
+    - Efficient async waiting
+
+    Example:
+        >>> limiter = AsyncRateLimiter(rate=50, per=60)
+        >>> await limiter.wait()  # Async wait for token
+        >>> # Make async API request
+        >>> async with aiohttp.ClientSession() as session:
+        ...     response = await session.get(url)
+    """
+
+    def __init__(self, rate: int = 50, per: int = 60):
+        """
+        Initialize async rate limiter.
+
+        Args:
+            rate: Number of requests allowed
+            per: Time window in seconds
+        """
+        self.rate = rate
+        self.per = per
+        self.allowance = float(rate)
+        self.last_check = time.monotonic()
+        self.lock = asyncio.Lock()
+
+        logger.info(f"AsyncRateLimiter initialized: {rate} requests per {per}s")
+
+    async def acquire(self) -> bool:
+        """
+        Try to acquire a token (non-blocking).
+
+        Returns:
+            True if token was acquired, False if rate limit would be exceeded
+        """
+        async with self.lock:
+            current = time.monotonic()
+            elapsed = current - self.last_check
+            self.last_check = current
+
+            # Replenish tokens
+            self.allowance += elapsed * (self.rate / self.per)
+
+            # Cap at maximum rate
+            if self.allowance > self.rate:
+                self.allowance = self.rate
+
+            # Try to consume a token
+            if self.allowance < 1.0:
+                return False
+
+            self.allowance -= 1.0
+            return True
+
+    async def wait(self, timeout: Optional[float] = None) -> bool:
+        """
+        Async wait until a token is available.
+
+        Args:
+            timeout: Maximum time to wait in seconds (None = wait forever)
+
+        Returns:
+            True if token was acquired, False if timeout occurred
+        """
+        start_time = time.monotonic()
+
+        while not await self.acquire():
+            if timeout and (time.monotonic() - start_time) >= timeout:
+                return False
+            await asyncio.sleep(0.1)
+
+        return True
+
+    async def reset(self) -> None:
+        """Reset the rate limiter to full allowance."""
+        async with self.lock:
+            self.allowance = float(self.rate)
+            self.last_check = time.monotonic()
+            logger.debug("AsyncRateLimiter reset")
+
+    async def get_wait_time(self) -> float:
+        """
+        Calculate estimated wait time for next token.
+
+        Returns:
+            Estimated seconds until next token is available
+        """
+        async with self.lock:
+            if self.allowance >= 1.0:
+                return 0.0
+
+            tokens_needed = 1.0 - self.allowance
+            time_per_token = self.per / self.rate
+            return tokens_needed * time_per_token
+
+
+# Global rate limiter instances for HTTP requests
+# CrossRef recommends 50 requests per second, we'll be more conservative
+_rate_limiter = RateLimiter(rate=50, per=60)  # 50 requests per minute
+_async_rate_limiter = AsyncRateLimiter(rate=50, per=60)
+
+logger.info("Global rate limiters initialized: 50 req/min")
 
 
 def polite_headers(
@@ -44,6 +267,7 @@ def get_with_retry(
 
     This function will attempt to GET the given URL using the provided headers.
     It implements:
+    - rate limiting using token bucket algorithm to prevent 429 errors,
     - exponential backoff between attempts (starting at 1.0s, doubling each time,
       capped at 16.0s),
     - handling of HTTP 429 (Too Many Requests) by reading the 'Retry-After'
@@ -73,6 +297,9 @@ def get_with_retry(
     """
     backoff = 1.0
     for attempt in range(max_retries + 1):
+        # Wait for rate limiter token before making request
+        _rate_limiter.wait()
+
         try:
             resp = requests.get(url, headers=headers, timeout=timeout)
             # Handle rate limiting
@@ -106,6 +333,7 @@ def get_json_with_retry(
 
     This helper sets the Accept header to "application/json" (in addition to
     any headers passed), then performs a GET using requests.get. Behavior:
+    - Rate limiting using token bucket algorithm to prevent 429 errors.
     - Uses exponential backoff (starting at 1.0s, doubling each retry, capped at 16.0s).
     - If a 429 status is received, attempts to use the 'Retry-After' header if numeric,
       otherwise uses the backoff delay.
@@ -135,6 +363,9 @@ def get_json_with_retry(
     h["Accept"] = "application/json"
     backoff = 1.0
     for attempt in range(max_retries + 1):
+        # Wait for rate limiter token before making request
+        _rate_limiter.wait()
+
         try:
             resp = requests.get(url, headers=h, timeout=timeout)
             if resp.status_code == 429:
