@@ -57,6 +57,15 @@ performance = [
     "aiohttp>=3.8.0",           # Async HTTP client for concurrent processing
 ]
 
+# Phase 4 enhancements (Database, API, CLI)
+phase4 = [
+    "sqlalchemy>=2.0.0",        # Database ORM for persistence layer
+    "fastapi>=0.104.0",         # Modern async web framework for REST API
+    "uvicorn[standard]>=0.24.0",# ASGI server for FastAPI
+    "click>=8.1.0",             # CLI framework for command-line tool
+    "pydantic>=2.0.0",          # Data validation for API
+]
+
 # Complete testing suite
 test = [
     "pytest>=7.0.0",           # Testing framework
@@ -109,23 +118,39 @@ production = [
     "aiohttp>=3.8.0",          # Async processing for performance
     "python-dotenv>=0.19.0",   # Environment variable management
     "psutil>=5.8.0",           # System monitoring
+    "sqlalchemy>=2.0.0",       # Database persistence (Phase 4)
+    "fastapi>=0.104.0",        # REST API (Phase 4)
+    "uvicorn[standard]>=0.24.0",# API server (Phase 4)
+    "click>=8.1.0",            # CLI tool (Phase 4)
+    "pydantic>=2.0.0",         # Data validation (Phase 4)
 ]
 
 # All optional features combined
 all = [
+    # Performance
     "aiohttp>=3.8.0",
+    # Phase 4
+    "sqlalchemy>=2.0.0",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "click>=8.1.0",
+    "pydantic>=2.0.0",
+    # Testing
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
-    "pytest-mock>=3.10.0", 
+    "pytest-mock>=3.10.0",
     "pytest-cov>=4.0.0",
     "coverage>=7.0.0",
+    # Code Quality
     "black>=22.0.0",
     "mypy>=1.0.0",
     "ruff>=0.1.0",
     "isort>=5.10.0",
     "bandit>=1.7.0",
+    # Documentation
     "sphinx>=5.0.0",
     "sphinx-rtd-theme>=1.0.0",
+    # Development
     "pre-commit>=2.20.0",
     "jupyter>=1.0.0",
     "ipykernel>=6.0.0",
@@ -148,7 +173,9 @@ Changelog = "https://github.com/Ajaykhanna/DOI2BibTex/releases"
 doi2bibtex = "streamlit_app:main"
 
 [project.scripts]
-doi2bibtex = "streamlit_app:main"
+doi2bibtex-web = "streamlit_app:main"
+doi2bibtex = "cli:main"
+doi2bibtex-api = "api_server:main"
 test-doi2bibtex = "run_tests:main"
 validate-doi2bibtex = "test_fixes:main"
 
