@@ -30,6 +30,7 @@ from .doi import clean_doi, is_valid_doi, extract_bibtex_fields
 from .keys import make_key, disambiguate
 from .export import order_bibtex_fields, safe_replace_key
 from .logging_config import get_logger
+from .cache import CacheManager
 
 
 # Configure logger
@@ -85,7 +86,16 @@ class AsyncDOIProcessor:
         self._semaphore: Optional[asyncio.Semaphore] = None
         self._used_keys: set[str] = set()  # Track citation keys to prevent duplicates
         self._key_lock: Optional[asyncio.Lock] = None  # Lock for thread-safe key generation
-        self._crossref_cache: dict[str, dict] = {}  # Cache for Crossref JSON responses
+
+        # Initialize advanced caching system (Phase 3)
+        self._cache = CacheManager(
+            memory=True,
+            file=True,
+            memory_maxsize=1000,
+            memory_ttl=3600,      # 1 hour in memory
+            file_ttl=86400        # 24 hours on disk
+        )
+        logger.info("AsyncDOIProcessor initialized with advanced caching")
         
     async def __aenter__(self):
         """Async context manager entry."""
@@ -253,11 +263,12 @@ class AsyncDOIProcessor:
     async def _enrich_with_crossref(self, doi: DOI, fields: Dict[str, Any]) -> Dict[str, Any]:
         """Enrich BibTeX fields with Crossref JSON data asynchronously."""
         try:
-            # Check cache first
-            if doi in self._crossref_cache:
-                logger.debug(f"Using cached Crossref data for {doi}")
-                message = self._crossref_cache[doi]
-            else:
+            # Check cache first (Phase 3: Advanced caching)
+            cache_key = f"crossref:{doi}"
+            message = self._cache.get(cache_key)
+
+            if message is None:
+                # Cache miss - fetch from API
                 crossref_url = CROSSREF_JSON + doi
                 json_data, error = await self._fetch_with_retry(crossref_url, json_response=True)
 
@@ -266,8 +277,8 @@ class AsyncDOIProcessor:
                     return fields
 
                 message = json_data["message"]
-                # Cache the result
-                self._crossref_cache[doi] = message
+                # Cache the result (1 hour TTL)
+                self._cache.set(cache_key, message, ttl=3600)
                 logger.debug(f"Cached Crossref data for {doi}")
 
             # Extract abstract if requested
