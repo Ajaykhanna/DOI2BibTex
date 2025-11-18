@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from .config import AppConfig
 from .state import BibtexEntry
 from .exceptions import (
-    DOIError, InvalidDOIError, DOINotFoundError, NetworkError, 
+    DOIError, InvalidDOIError, DOINotFoundError, NetworkError,
     BatchProcessingError, handle_exception, safe_file_read
 )
 from .http import get_with_retry, polite_headers, get_json_with_retry
@@ -25,6 +25,7 @@ from .keys import make_key, disambiguate
 from .export import order_bibtex_fields, safe_replace_key
 from .dedupe import find_duplicates
 from .analytics import summarize
+from .cache import CacheManager
 
 
 # Configure logger
@@ -67,7 +68,16 @@ class DOIProcessor:
     def __init__(self, config: AppConfig):
         self.config = config
         self._used_keys: set[str] = set()  # Track citation keys to prevent duplicates
-        self._crossref_cache: dict[str, dict] = {}  # Cache for Crossref JSON responses
+
+        # Initialize advanced caching system (Phase 3)
+        self._cache = CacheManager(
+            memory=True,
+            file=True,
+            memory_maxsize=1000,
+            memory_ttl=3600,      # 1 hour in memory
+            file_ttl=86400        # 24 hours on disk
+        )
+        logger.info("DOIProcessor initialized with advanced caching")
         
     @handle_exception
     def parse_input(self, raw_text: str, uploaded_file=None) -> List[str]:
@@ -163,11 +173,12 @@ class DOIProcessor:
 
         if needs_crossref:
             try:
-                # Check cache first
-                if doi in self._crossref_cache:
-                    logger.debug(f"Using cached Crossref data for {doi}")
-                    crossref_message = self._crossref_cache[doi]
-                else:
+                # Check cache first (Phase 3: Advanced caching)
+                cache_key = f"crossref:{doi}"
+                crossref_message = self._cache.get(cache_key)
+
+                if crossref_message is None:
+                    # Cache miss - fetch from API
                     json_data, error = get_json_with_retry(
                         CROSSREF_JSON + doi,
                         polite_headers(APP_EMAIL),
@@ -177,8 +188,8 @@ class DOIProcessor:
 
                     if json_data and not error and "message" in json_data:
                         crossref_message = json_data["message"]
-                        # Cache the result
-                        self._crossref_cache[doi] = crossref_message
+                        # Cache the result (1 hour TTL)
+                        self._cache.set(cache_key, crossref_message, ttl=3600)
                         logger.debug(f"Cached Crossref data for {doi}")
 
                 if crossref_message:
@@ -308,10 +319,12 @@ class DOIProcessor:
             Page number string or None
         """
         try:
-            # Check cache first
-            if doi in self._crossref_cache:
-                message = self._crossref_cache[doi]
-            else:
+            # Check cache first (Phase 3: Advanced caching)
+            cache_key = f"crossref:{doi}"
+            message = self._cache.get(cache_key)
+
+            if message is None:
+                # Cache miss - fetch from API
                 json_data, error = get_json_with_retry(
                     CROSSREF_JSON + doi,
                     polite_headers(APP_EMAIL),
@@ -323,8 +336,8 @@ class DOIProcessor:
                     return None
 
                 message = json_data.get('message', {})
-                # Cache the result
-                self._crossref_cache[doi] = message
+                # Cache the result (1 hour TTL)
+                self._cache.set(cache_key, message, ttl=3600)
 
             # Try different field names for pages
             for field in ['page', 'pages', 'article-number']:
