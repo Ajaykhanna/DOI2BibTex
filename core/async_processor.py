@@ -204,7 +204,7 @@ class AsyncDOIProcessor:
         
         return None, "Max retries exceeded"
 
-    async def _try_multiple_sources_async(self, doi: DOI) -> Tuple[Optional[str], Optional[str]]:
+    async def _try_multiple_sources_async(self, doi: DOI) -> Tuple[Optional[str], Optional[str], dict]:
         """
         Try fetching BibTeX from multiple sources in order of preference.
 
@@ -212,8 +212,10 @@ class AsyncDOIProcessor:
             doi: DOI string to fetch
 
         Returns:
-            (bibtex_content, source_name) on success, (None, None) if all fail
+            (bibtex_content, source_name, context_dict) on success or failure
         """
+        source_failures = {}  # Track failures for error context
+
         for source_name, url_template in DOI_SOURCES:
             url = url_template.format(doi=doi)
             logger.info(f"Trying {source_name} for DOI: {doi}")
@@ -223,16 +225,30 @@ class AsyncDOIProcessor:
 
                 if not error and bib_content and "@" in bib_content:
                     logger.info(f"✓ Successfully fetched from {source_name}")
-                    return bib_content, source_name
+                    context = {
+                        "source": source_name,
+                        "url": url,
+                        "sources_tried": list(source_failures.keys())
+                    }
+                    return bib_content, source_name, context
                 else:
-                    logger.debug(f"✗ {source_name} failed: {error or 'No valid BibTeX'}")
+                    source_failures[source_name] = error or "No valid BibTeX"
+                    logger.debug(f"✗ {source_name} failed: {source_failures[source_name]}")
 
             except Exception as e:
+                source_failures[source_name] = str(e)
                 logger.debug(f"✗ {source_name} error: {e}")
                 continue
 
+        # All sources failed - return context with all failures
         logger.warning(f"All sources failed for DOI: {doi}")
-        return None, None
+        context = {
+            "sources_tried": list(DOI_SOURCES),
+            "source_failures": source_failures,
+            "timeout": self.config.timeout,
+            "max_retries": self.config.max_retries
+        }
+        return None, None, context
 
     async def _enrich_with_crossref(self, doi: DOI, fields: Dict[str, Any]) -> Dict[str, Any]:
         """Enrich BibTeX fields with Crossref JSON data asynchronously."""
@@ -361,13 +377,16 @@ class AsyncDOIProcessor:
         metadata: Dict[str, Any] = {"doi": doi, "status": "processing"}
 
         # Step 1: Try fetching BibTeX from multiple sources
-        bib_content, source_used = await self._try_multiple_sources_async(doi)
+        bib_content, source_used, fetch_context = await self._try_multiple_sources_async(doi)
 
         if not bib_content:
-            raise DOINotFoundError(doi)
+            raise DOINotFoundError(doi, context=fetch_context)
 
         if "@" not in bib_content:
-            raise DOIError("No BibTeX content in response", doi)
+            raise DOIError("No BibTeX content in response", doi, context=fetch_context)
+
+        metadata["source"] = source_used
+        metadata["fetch_context"] = fetch_context
         
         # Extract and enrich BibTeX fields
         fields = extract_bibtex_fields(bib_content)
@@ -493,14 +512,26 @@ class AsyncDOIProcessor:
                 return entry
                 
             except Exception as e:
-                logger.error(f"Failed to process DOI {doi}: {e}")
+                # Enhanced error logging with context
+                if hasattr(e, 'to_dict'):
+                    # Custom exception with structured data
+                    error_data = e.to_dict()
+                    logger.error(f"Failed to process DOI {doi}: {e}", extra={"error_context": error_data})
+                else:
+                    # Generic exception
+                    logger.error(f"Failed to process DOI {doi}: {e}")
+
                 failed_dois.append(doi)
-                
-                # Create error entry
+
+                # Create error entry with context if available
+                error_metadata = {"doi": doi, "status": "error", "error": str(e)}
+                if hasattr(e, 'to_dict'):
+                    error_metadata["error_details"] = e.to_dict()
+
                 error_entry = BibtexEntry(
                     key="unknown",
                     content=f"Error: {doi} → {str(e)}",
-                    metadata={"doi": doi, "status": "error", "error": str(e)}
+                    metadata=error_metadata
                 )
                 
                 async with progress_lock:
