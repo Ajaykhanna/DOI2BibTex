@@ -51,3 +51,6 @@ temp/
 .env
 .env.local
 .env.*.local
+
+# Cache directories (Phase 3)
+.cache/
