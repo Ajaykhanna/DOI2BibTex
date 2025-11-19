@@ -17,13 +17,15 @@ def safe_replace_key(bibtex: str, old: str, new: str) -> str:
 
     Behavior notes
     - Only replaces the key that appears in the entry header pattern "@type{KEY,".
+    - Allows optional whitespace after the opening brace: "@type{ KEY," or "@type{KEY,"
     - Uses a single substitution (count=1) and multiline mode to avoid accidental replacements
       elsewhere in the file.
     - The function does not validate uniqueness or BibTeX key syntax beyond the header match.
     """
-    # Replace only in the entry header "@type{KEY,"
+    # Replace only in the entry header "@type{KEY," or "@type{ KEY,"
+    # Allow optional whitespace after the opening brace
     return re.sub(
-        rf"(^@\w+\{{){re.escape(old)}(,)", rf"\1{new}\2", bibtex, count=1, flags=re.M
+        rf"(^@\w+\{{\s*){re.escape(old)}(\s*,)", rf"\1{new}\2", bibtex, count=1, flags=re.M
     )
 
 
