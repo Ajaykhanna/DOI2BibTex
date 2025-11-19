@@ -268,6 +268,7 @@ def render_conversion_tab() -> None:
             "or upload .txt / .csv with DOIs",
             type=["txt", "csv"],
             help="Upload a text or CSV file containing DOIs",
+            key="doi_file_uploader",
         )
 
     if st.button("Convert", type="primary"):
@@ -305,6 +306,10 @@ def render_conversion_tab() -> None:
             state_manager.clear_entries()  # Clear previous results
             new_state = state_manager.add_entries(result.entries)
             state_manager.update_analytics(result.analytics)
+
+            # Clear file uploader to prevent memory issues on rerun
+            if "doi_file_uploader" in st.session_state:
+                st.session_state.doi_file_uploader = None
 
             # Display results
             display_batch_results(
