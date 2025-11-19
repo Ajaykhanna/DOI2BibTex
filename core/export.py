@@ -3,64 +3,6 @@ import re
 from typing import Dict, List
 
 
-def order_bibtex_fields(bibtex: str, field_order: List[str]) -> str:
-    """
-    Reorder fields inside a single BibTeX entry using a simple regex-based approach.
-
-    Parameters
-    - bibtex: A string containing one BibTeX entry (e.g. "@article{key, title = {..}, ... }").
-    - field_order: A list of field names (strings) indicating the desired ordering
-      for fields that are present (e.g. ["author", "title", "year"]).
-
-    Returns
-    - A new BibTeX entry string with fields ordered: first those present in `field_order`
-      (in that order), then the remaining fields in their original sequence.
-
-    Notes
-    - This implementation is a naive parser: it expects fields of the form `name = {value}`
-      and will not reliably handle nested braces inside values or alternate quoting styles.
-    - The function preserves field values but may normalize spacing and braces.
-    - Handles special formatting: DOI/ISSN uppercase, month without braces.
-    """
-    fields = re.findall(r"(\w+)\s*=\s*\{([^}]*)\}", bibtex)
-    d = dict(fields)
-    entry_type = re.search(r"@(\w+)\{", bibtex)
-    key = re.search(r"@\w+\{([^,]+),", bibtex)
-    entry_type = entry_type.group(1) if entry_type else "article"
-    key = key.group(1) if key else "ref"
-
-    # Build ordered fields list with case-insensitive matching
-    field_order_lower = [f.lower() for f in field_order]
-    field_map = {k.lower(): k for k, v in fields}  # Map lowercase to original case
-
-    ordered = []
-    for target_field in field_order:
-        target_lower = target_field.lower()
-        # Find the field in the dict (case-insensitive)
-        for actual_field, value in fields:
-            if actual_field.lower() == target_lower:
-                # Use the target field name (which may be DOI, ISSN, etc.)
-                ordered.append((target_field, value))
-                break
-
-    # Add remaining fields not in field_order
-    rest = [(k, v) for k, v in fields if k.lower() not in field_order_lower]
-    ordered.extend(rest)
-
-    # Format fields with special handling for month
-    formatted_fields = []
-    for k, v in ordered:
-        if k.lower() == 'month':
-            # Month without braces
-            formatted_fields.append(f"  {k} = {v}")
-        else:
-            # Normal field with braces
-            formatted_fields.append(f"  {k} = {{{v}}}")
-
-    body = ",\n".join(formatted_fields)
-    return f"@{entry_type}{{{key},\n{body}\n}}"
-
-
 def safe_replace_key(bibtex: str, old: str, new: str) -> str:
     """
     Replace the entry key in a BibTeX header without touching the body.
