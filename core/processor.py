@@ -227,20 +227,35 @@ class DOIProcessor:
 
         old_key = fields.get("key", "")
         if old_key and old_key != citation_key:
+            logger.debug(f"Replacing citation key: '{old_key}' -> '{citation_key}'")
             bib_content = safe_replace_key(bib_content, old_key, citation_key)
+            # Verify replacement worked
+            import re as _re
+            verify_key = _re.search(r"@\w+\{([^,]+),", bib_content)
+            if verify_key:
+                logger.debug(f"Key after replacement: '{verify_key.group(1)}'")
         fields["key"] = citation_key
-        
+
         # Update journal information
         bib_content = self._update_journal_info(bib_content, fields)
-        
+
         # Handle abstract inclusion
         bib_content = self._handle_abstracts(bib_content, fields)
-        
+
         # Reorder fields
         bib_content = order_bibtex_fields(
-            bib_content, 
+            bib_content,
             self.config.field_order
         )
+
+        # Verify final key in content matches entry.key
+        import re as _re
+        final_key = _re.search(r"@\w+\{([^,]+),", bib_content)
+        if final_key and final_key.group(1) != citation_key:
+            logger.warning(
+                f"Citation key mismatch after processing! "
+                f"entry.key='{citation_key}' but content has '{final_key.group(1)}'"
+            )
         
         metadata["status"] = "ok"
         metadata["metadata"] = fields
