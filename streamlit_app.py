@@ -253,6 +253,12 @@ def render_conversion_tab() -> None:
     config = get_config()
     state = get_state()
 
+    # Clear file uploader if flagged (before widget is created)
+    if st.session_state.get("clear_file_uploader", False):
+        if "doi_file_uploader" in st.session_state:
+            del st.session_state.doi_file_uploader
+        st.session_state.clear_file_uploader = False
+
     col1, col2 = st.columns(2)
 
     with col1:
@@ -307,9 +313,8 @@ def render_conversion_tab() -> None:
             new_state = state_manager.add_entries(result.entries)
             state_manager.update_analytics(result.analytics)
 
-            # Clear file uploader to prevent memory issues on rerun
-            if "doi_file_uploader" in st.session_state:
-                st.session_state.doi_file_uploader = None
+            # Flag to clear file uploader on next run (prevents memory errors)
+            st.session_state.clear_file_uploader = True
 
             # Display results
             display_batch_results(
