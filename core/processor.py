@@ -226,14 +226,22 @@ class DOIProcessor:
         self._used_keys.add(citation_key)
 
         old_key = fields.get("key", "")
+        logger.debug(f"Citation key processing: old='{old_key}', new='{citation_key}'")
+
         if old_key and old_key != citation_key:
-            logger.debug(f"Replacing citation key: '{old_key}' -> '{citation_key}'")
+            logger.debug(f"Replacing citation key in content: '{old_key}' -> '{citation_key}'")
+            logger.debug(f"Content BEFORE replacement (first 100 chars): {bib_content[:100]}")
             bib_content = safe_replace_key(bib_content, old_key, citation_key)
+            logger.debug(f"Content AFTER replacement (first 100 chars): {bib_content[:100]}")
+
             # Verify replacement worked
             import re as _re
             verify_key = _re.search(r"@\w+\{([^,]+),", bib_content)
             if verify_key:
-                logger.debug(f"Key after replacement: '{verify_key.group(1)}'")
+                actual_key = verify_key.group(1)
+                logger.debug(f"Verified key in content: '{actual_key}'")
+                if actual_key != citation_key:
+                    logger.error(f"REPLACEMENT FAILED! Expected '{citation_key}' but found '{actual_key}'")
         fields["key"] = citation_key
 
         # Update journal information
