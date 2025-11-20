@@ -16,8 +16,13 @@ from dataclasses import dataclass
 from .config import AppConfig
 from .state import BibtexEntry
 from .exceptions import (
-    DOIError, InvalidDOIError, DOINotFoundError, NetworkError,
-    BatchProcessingError, handle_exception, safe_file_read
+    DOIError,
+    InvalidDOIError,
+    DOINotFoundError,
+    NetworkError,
+    BatchProcessingError,
+    handle_exception,
+    safe_file_read,
 )
 from .http import get_with_retry, polite_headers, get_json_with_retry
 from .doi import clean_doi, is_valid_doi, extract_bibtex_fields
@@ -45,16 +50,17 @@ APP_EMAIL = "akhanna2@ucmerced.edu"
 @dataclass
 class ProcessingResult:
     """Result of DOI processing operation."""
+
     entries: List[BibtexEntry]
     successful_count: int
     failed_count: int
     failed_dois: List[str]
     analytics: Dict[str, Any]
-    
+
     @property
     def total_count(self) -> int:
         return self.successful_count + self.failed_count
-    
+
     @property
     def success_rate(self) -> float:
         if self.total_count == 0:
@@ -74,34 +80,34 @@ class DOIProcessor:
             memory=True,
             file=True,
             memory_maxsize=1000,
-            memory_ttl=3600,      # 1 hour in memory
-            file_ttl=86400        # 24 hours on disk
+            memory_ttl=3600,  # 1 hour in memory
+            file_ttl=86400,  # 24 hours on disk
         )
         logger.info("DOIProcessor initialized with advanced caching")
-        
+
     @handle_exception
     def parse_input(self, raw_text: str, uploaded_file=None) -> List[str]:
         """
         Parse raw input and optional uploaded file to extract DOIs.
-        
+
         Args:
             raw_text: Raw text containing DOIs
             uploaded_file: Optional file upload
-            
+
         Returns:
             List of cleaned and validated DOI strings
-            
+
         Raises:
             InvalidDOIError: When DOI validation fails
             FileProcessingError: When file processing fails
         """
         items: List[str] = []
-        
+
         # Process raw text input
         if raw_text:
             parts = re.split(r"[\s,]+", raw_text.strip())
             items.extend([p for p in parts if p])
-        
+
         # Process uploaded file
         if uploaded_file is not None:
             try:
@@ -111,10 +117,10 @@ class DOIProcessor:
             except Exception as e:
                 logger.error(f"File processing error: {e}")
                 raise
-        
+
         # Clean DOIs
         cleaned = [clean_doi(x) for x in items]
-        
+
         # Validate DOIs if requested
         if self.config.validate_dois:
             validated = []
@@ -124,24 +130,24 @@ class DOIProcessor:
                 else:
                     logger.warning(f"Invalid DOI filtered out: {doi}")
             cleaned = validated
-        
+
         if not cleaned:
             logger.info("No valid DOIs found in input")
         else:
             logger.info(f"Extracted {len(cleaned)} valid DOIs")
-        
+
         return cleaned
 
     def fetch_bibtex(self, doi: str) -> BibtexEntry:
         """
         Fetch a single BibTeX entry for a DOI.
-        
+
         Args:
             doi: DOI string to fetch
-            
+
         Returns:
             BibtexEntry with metadata
-            
+
         Raises:
             DOINotFoundError: When DOI is not found
             NetworkError: When network request fails
@@ -166,9 +172,9 @@ class DOIProcessor:
         # Step 3: Get Crossref data for enrichment (pages, ISSN, url, month, abstracts)
         crossref_message = None
         needs_crossref = (
-            self.config.fetch_abstracts or
-            self.config.use_abbrev_journal or
-            "pages" not in fields
+            self.config.fetch_abstracts
+            or self.config.use_abbrev_journal
+            or "pages" not in fields
         )
 
         if needs_crossref:
@@ -183,7 +189,7 @@ class DOIProcessor:
                         CROSSREF_JSON + doi,
                         polite_headers(APP_EMAIL),
                         timeout=self.config.timeout,
-                        max_retries=self.config.max_retries
+                        max_retries=self.config.max_retries,
                     )
 
                     if json_data and not error and "message" in json_data:
@@ -197,7 +203,9 @@ class DOIProcessor:
                     if self.config.fetch_abstracts:
                         abstract_jats = crossref_message.get("abstract")
                         if abstract_jats:
-                            abstract_clean = re.sub(r"<[^>]+>", "", abstract_jats).strip()
+                            abstract_clean = re.sub(
+                                r"<[^>]+>", "", abstract_jats
+                            ).strip()
                             fields["abstract"] = abstract_clean
 
                     # Extract journal information
@@ -215,38 +223,41 @@ class DOIProcessor:
 
         # Step 5: Enrich with additional fields (ISSN, url, month)
         fields = self._enrich_with_additional_fields(doi, fields, crossref_message)
-        
+
         # Normalize author names if requested
         if self.config.normalize_authors and "author" in fields:
             fields["author"] = re.sub(r"\s+", " ", fields["author"]).strip()
-        
+
         # Generate and update citation key
         base_key = make_key(fields, self.config.key_pattern)
         citation_key = disambiguate(base_key, self._used_keys)
         self._used_keys.add(citation_key)
 
         old_key = fields.get("key", "")
-        logger.info(f"📝 Citation key: old='{old_key}', new='{citation_key}'")
+        # logger.info(f"📝 Citation key: old='{old_key}', new='{citation_key}'")
 
         if old_key and old_key != citation_key:
-            logger.info(f"🔄 Replacing citation key: '{old_key}' -> '{citation_key}'")
+            # logger.info(f"🔄 Replacing citation key: '{old_key}' -> '{citation_key}'")
 
             # Log content before replacement
             import re as _re
-            before_key = _re.search(r"@\w+\{([^,]+),", bib_content)
-            logger.info(f"   Content has key BEFORE: '{before_key.group(1) if before_key else 'NONE'}'")
-            logger.info(f"   First 120 chars: {bib_content[:120]}")
+
+            # before_key = _re.search(r"@\w+\{([^,]+),", bib_content)
+            # logger.info(f"   Content has key BEFORE: '{before_key.group(1) if before_key else 'NONE'}'")
+            # logger.info(f"   First 120 chars: {bib_content[:120]}")
 
             bib_content = safe_replace_key(bib_content, old_key, citation_key)
 
             # Log content after replacement
-            after_key = _re.search(r"@\w+\{([^,]+),", bib_content)
-            logger.info(f"   Content has key AFTER: '{after_key.group(1) if after_key else 'NONE'}'")
-            logger.info(f"   First 120 chars: {bib_content[:120]}")
+            # after_key = _re.search(r"@\w+\{([^,]+),", bib_content)
+            # logger.info(f"   Content has key AFTER: '{after_key.group(1) if after_key else 'NONE'}'")
+            # logger.info(f"   First 120 chars: {bib_content[:120]}")
 
             # Check if replacement worked
-            if after_key and after_key.group(1) != citation_key:
-                logger.error(f"❌ REPLACEMENT FAILED! Expected '{citation_key}' but found '{after_key.group(1)}'")
+            # if after_key and after_key.group(1) != citation_key:
+            #     logger.error(
+            #         f"❌ REPLACEMENT FAILED! Expected '{citation_key}' but found '{after_key.group(1)}'"
+            #     )
         fields["key"] = citation_key
 
         # Update journal information
@@ -256,31 +267,27 @@ class DOIProcessor:
         bib_content = self._handle_abstracts(bib_content, fields)
 
         # Reorder fields
-        bib_content = order_bibtex_fields(
-            bib_content,
-            self.config.field_order
-        )
+        bib_content = order_bibtex_fields(bib_content, self.config.field_order)
 
         # Verify final key in content matches entry.key
         import re as _re
+
         final_key = _re.search(r"@\w+\{([^,]+),", bib_content)
         if final_key and final_key.group(1) != citation_key:
             logger.warning(
                 f"Citation key mismatch after processing! "
                 f"entry.key='{citation_key}' but content has '{final_key.group(1)}'"
             )
-        
+
         metadata["status"] = "ok"
         metadata["metadata"] = fields
-        
-        logger.info(f"Successfully processed DOI: {doi}")
-        return BibtexEntry(
-            key=citation_key,
-            content=bib_content,
-            metadata=metadata
-        )
 
-    def _try_multiple_sources(self, doi: str) -> Tuple[Optional[str], Optional[str], dict]:
+        logger.info(f"Successfully processed DOI: {doi}")
+        return BibtexEntry(key=citation_key, content=bib_content, metadata=metadata)
+
+    def _try_multiple_sources(
+        self, doi: str
+    ) -> Tuple[Optional[str], Optional[str], dict]:
         """
         Try fetching BibTeX from multiple sources in order of preference.
 
@@ -301,7 +308,7 @@ class DOIProcessor:
                     url,
                     polite_headers(APP_EMAIL),
                     timeout=self.config.timeout,
-                    max_retries=self.config.max_retries
+                    max_retries=self.config.max_retries,
                 )
 
                 if resp and resp.status_code == 200:
@@ -311,7 +318,7 @@ class DOIProcessor:
                         context = {
                             "source": source_name,
                             "url": url,
-                            "sources_tried": list(source_failures.keys())
+                            "sources_tried": list(source_failures.keys()),
                         }
                         return bibtex, source_name, context
                     else:
@@ -320,7 +327,9 @@ class DOIProcessor:
                 else:
                     status = resp.status_code if resp else "no response"
                     source_failures[source_name] = err or f"HTTP {status}"
-                    logger.warning(f"✗ {source_name} failed: {source_failures[source_name]}")
+                    logger.warning(
+                        f"✗ {source_name} failed: {source_failures[source_name]}"
+                    )
 
             except Exception as e:
                 source_failures[source_name] = str(e)
@@ -332,7 +341,7 @@ class DOIProcessor:
             "sources_tried": list(DOI_SOURCES),
             "source_failures": source_failures,
             "timeout": self.config.timeout,
-            "max_retries": self.config.max_retries
+            "max_retries": self.config.max_retries,
         }
         return None, None, context
 
@@ -357,18 +366,18 @@ class DOIProcessor:
                     CROSSREF_JSON + doi,
                     polite_headers(APP_EMAIL),
                     timeout=self.config.timeout,
-                    max_retries=self.config.max_retries
+                    max_retries=self.config.max_retries,
                 )
 
                 if error or not json_data:
                     return None
 
-                message = json_data.get('message', {})
+                message = json_data.get("message", {})
                 # Cache the result (1 hour TTL)
                 self._cache.set(cache_key, message, ttl=3600)
 
             # Try different field names for pages
-            for field in ['page', 'pages', 'article-number']:
+            for field in ["page", "pages", "article-number"]:
                 if field in message and message[field]:
                     logger.info(f"Extracted pages from Crossref: {message[field]}")
                     return str(message[field])
@@ -390,11 +399,11 @@ class DOIProcessor:
             Updated BibTeX content
         """
         # Check if pages already exist
-        if re.search(r'\bpages\s*=', bib_content, re.IGNORECASE):
+        if re.search(r"\bpages\s*=", bib_content, re.IGNORECASE):
             return bib_content
 
         # Add pages field before closing brace
-        if bib_content.strip().endswith('}'):
+        if bib_content.strip().endswith("}"):
             bib_content = bib_content.strip()[:-1]
             bib_content += f",\n  pages = {{{pages}}}\n}}"
 
@@ -404,7 +413,7 @@ class DOIProcessor:
         self,
         doi: str,
         fields: Dict[str, Any],
-        crossref_message: Optional[Dict[str, Any]] = None
+        crossref_message: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Enrich BibTeX fields with ISSN, url, and month from Crossref data.
@@ -419,32 +428,46 @@ class DOIProcessor:
         """
         if not crossref_message:
             # Minimal enrichment with just URL
-            if 'url' not in fields:
-                fields['url'] = f"http://dx.doi.org/{doi}"
+            if "url" not in fields:
+                fields["url"] = f"http://dx.doi.org/{doi}"
             return fields
 
         # Extract ISSN
-        if 'ISSN' in crossref_message and crossref_message['ISSN']:
-            issn_list = crossref_message['ISSN']
+        if "ISSN" in crossref_message and crossref_message["ISSN"]:
+            issn_list = crossref_message["ISSN"]
             if isinstance(issn_list, list) and issn_list:
-                fields['ISSN'] = issn_list[0]
+                fields["ISSN"] = issn_list[0]
 
         # Extract URL
-        if 'URL' in crossref_message:
-            fields['url'] = crossref_message['URL']
+        if "URL" in crossref_message:
+            fields["url"] = crossref_message["URL"]
         else:
-            fields['url'] = f"http://dx.doi.org/{doi}"
+            fields["url"] = f"http://dx.doi.org/{doi}"
 
         # Extract month from publication date
-        published = crossref_message.get('published-print') or crossref_message.get('published-online')
-        if published and 'date-parts' in published:
-            date_parts = published['date-parts'][0]
+        published = crossref_message.get("published-print") or crossref_message.get(
+            "published-online"
+        )
+        if published and "date-parts" in published:
+            date_parts = published["date-parts"][0]
             if len(date_parts) >= 2 and date_parts[1]:
                 month_num = date_parts[1]
-                months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
-                         'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+                months = [
+                    "jan",
+                    "feb",
+                    "mar",
+                    "apr",
+                    "may",
+                    "jun",
+                    "jul",
+                    "aug",
+                    "sep",
+                    "oct",
+                    "nov",
+                    "dec",
+                ]
                 if 1 <= month_num <= 12:
-                    fields['month'] = months[month_num - 1]
+                    fields["month"] = months[month_num - 1]
 
         return fields
 
@@ -457,13 +480,13 @@ class DOIProcessor:
                 timeout=self.config.timeout,
                 max_retries=self.config.max_retries,
             )
-            
+
             if error or not json_data or "message" not in json_data:
                 logger.warning(f"Crossref enrichment failed for {doi}: {error}")
                 return fields
-            
+
             message = json_data["message"]
-            
+
             # Extract abstract if requested
             if self.config.fetch_abstracts:
                 abstract_jats = message.get("abstract")
@@ -471,16 +494,18 @@ class DOIProcessor:
                     # Remove JATS XML tags
                     abstract_clean = re.sub(r"<[^>]+>", "", abstract_jats).strip()
                     fields["abstract"] = abstract_clean
-            
+
             # Extract journal information
             self._extract_journal_info(message, fields)
-            
+
         except Exception as e:
             logger.warning(f"Crossref enrichment error for {doi}: {e}")
-        
+
         return fields
-    
-    def _extract_journal_info(self, crossref_message: Dict[str, Any], fields: Dict[str, Any]) -> None:
+
+    def _extract_journal_info(
+        self, crossref_message: Dict[str, Any], fields: Dict[str, Any]
+    ) -> None:
         """Extract journal information from Crossref message."""
         # Full journal title
         container_title = crossref_message.get("container-title")
@@ -488,14 +513,14 @@ class DOIProcessor:
             fields["journal_full"] = container_title[0]
         elif isinstance(container_title, str):
             fields["journal_full"] = container_title
-        
+
         # Abbreviated journal title
         short_title = crossref_message.get("short-container-title")
         if isinstance(short_title, list) and short_title:
             fields["journal_abbrev"] = short_title[0]
         elif isinstance(short_title, str):
             fields["journal_abbrev"] = short_title
-    
+
     def _update_journal_info(self, bib_content: str, fields: Dict[str, Any]) -> str:
         """Update journal information in BibTeX content."""
         if self.config.use_abbrev_journal and fields.get("journal_abbrev"):
@@ -508,9 +533,9 @@ class DOIProcessor:
             bib_content = self._upsert_bibtex_field(
                 bib_content, "journal", fields["journal"]
             )
-        
+
         return bib_content
-    
+
     def _handle_abstracts(self, bib_content: str, fields: Dict[str, Any]) -> str:
         """Handle abstract inclusion in BibTeX content."""
         if not self.config.include_abstracts:
@@ -519,46 +544,46 @@ class DOIProcessor:
             bib_content = self._upsert_bibtex_field(
                 bib_content, "abstract", fields["abstract"]
             )
-        
+
         return bib_content
-    
+
     def _upsert_bibtex_field(self, bibtex: str, field: str, value: str) -> str:
         """Insert or update a field in BibTeX entry."""
         if not value:
             return bibtex
-        
+
         pattern = re.compile(
             rf"(^\s*{re.escape(field)}\s*=\s*\{{)(.*?)(\}}\s*,?)",
             re.IGNORECASE | re.MULTILINE | re.DOTALL,
         )
-        
+
         def replace_func(match):
             return match.group(1) + value + match.group(3)
-        
+
         new_content, substitutions = pattern.subn(replace_func, bibtex)
         if substitutions > 0:
             return new_content
-        
+
         # Field doesn't exist, add it before closing brace
         closing_pattern = re.compile(r"\n\}$", re.MULTILINE)
         return closing_pattern.sub(
-            lambda m: f",\n  {field} = {{{value}}}\n}}", 
-            bibtex.strip(), 
-            count=1
+            lambda m: f",\n  {field} = {{{value}}}\n}}", bibtex.strip(), count=1
         )
-    
+
     @handle_exception
-    def process_batch(self, dois: List[str], progress_callback=None) -> ProcessingResult:
+    def process_batch(
+        self, dois: List[str], progress_callback=None
+    ) -> ProcessingResult:
         """
         Process a batch of DOIs.
-        
+
         Args:
             dois: List of DOI strings to process
             progress_callback: Optional callback for progress updates
-            
+
         Returns:
             ProcessingResult with entries and statistics
-            
+
         Raises:
             BatchProcessingError: When batch processing encounters issues
         """
@@ -568,9 +593,9 @@ class DOIProcessor:
                 successful_count=0,
                 failed_count=0,
                 failed_dois=[],
-                analytics={}
+                analytics={},
             )
-        
+
         logger.info(f"Processing batch of {len(dois)} DOIs")
 
         # Reset citation key tracking for this batch
@@ -578,27 +603,30 @@ class DOIProcessor:
 
         entries: List[BibtexEntry] = []
         failed_dois: List[str] = []
-        
+
         total = len(dois)
         for i, doi in enumerate(dois, 1):
             try:
                 entry = self.fetch_bibtex(doi)
                 entries.append(entry)
-                
+
                 # Update progress
                 if progress_callback:
                     progress_callback(i, total, doi)
-                
+
                 # Rate limiting delay if show_progress is enabled
                 if self.config.show_progress:
                     time.sleep(0.1)
-                    
+
             except Exception as e:
                 # Enhanced error logging with context
-                if hasattr(e, 'to_dict'):
+                if hasattr(e, "to_dict"):
                     # Custom exception with structured data
                     error_data = e.to_dict()
-                    logger.error(f"Failed to process DOI {doi}: {e}", extra={"error_context": error_data})
+                    logger.error(
+                        f"Failed to process DOI {doi}: {e}",
+                        extra={"error_context": error_data},
+                    )
                 else:
                     # Generic exception
                     logger.error(f"Failed to process DOI {doi}: {e}")
@@ -607,48 +635,50 @@ class DOIProcessor:
 
                 # Create error entry with context if available
                 error_metadata = {"doi": doi, "status": "error", "error": str(e)}
-                if hasattr(e, 'to_dict'):
+                if hasattr(e, "to_dict"):
                     error_metadata["error_details"] = e.to_dict()
 
                 error_entry = BibtexEntry(
                     key="unknown",
                     content=f"Error: {doi} → {str(e)}",
-                    metadata=error_metadata
+                    metadata=error_metadata,
                 )
                 entries.append(error_entry)
-                
+
                 # Update progress
                 if progress_callback:
                     progress_callback(i, total, doi)
-        
+
         # Remove duplicates if requested
         if self.config.remove_duplicates:
             original_count = len(entries)
             duplicate_indices = find_duplicates(
                 [(e.key, e.content, e.metadata) for e in entries]
             )
-            
+
             if duplicate_indices:
-                entries = [e for idx, e in enumerate(entries) if idx not in duplicate_indices]
+                entries = [
+                    e for idx, e in enumerate(entries) if idx not in duplicate_indices
+                ]
                 logger.info(f"Removed {len(duplicate_indices)} duplicates")
-        
+
         # Calculate analytics
         analytics = summarize([(e.key, e.content, e.metadata) for e in entries])
-        
+
         successful_count = len([e for e in entries if not e.has_error])
         failed_count = len(failed_dois)
-        
+
         logger.info(
             f"Batch processing complete: {successful_count} successful, "
             f"{failed_count} failed out of {total} DOIs"
         )
-        
+
         return ProcessingResult(
             entries=entries,
             successful_count=successful_count,
             failed_count=failed_count,
             failed_dois=failed_dois,
-            analytics=analytics
+            analytics=analytics,
         )
 
 
