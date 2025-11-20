@@ -54,3 +54,10 @@ temp/
 
 # Cache directories (Phase 3)
 .cache/
+
+# Database files (Phase 4)
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+doi2bibtex.db*

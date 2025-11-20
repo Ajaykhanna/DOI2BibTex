@@ -1,0 +1,139 @@
+# DOI2BibTeX - Docker Compose Configuration
+# Phase 6.3a: Docker Setup
+#
+# This compose file provides easy deployment for all DOI2BibTeX services:
+# - API Server (FastAPI)
+# - Web UI (Streamlit)
+# - PostgreSQL Database (optional)
+#
+# Usage:
+#   Start all services: docker-compose up -d
+#   Start API only:     docker-compose up -d api
+#   Start Web only:     docker-compose up -d web
+#   View logs:          docker-compose logs -f
+#   Stop all:           docker-compose down
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # REST API Service (FastAPI)
+  # ============================================================================
+  api:
+    build:
+      context: .
+      target: api
+    image: doi2bibtex:api
+    container_name: doi2bibtex-api
+    ports:
+      - "8000:8000"
+    environment:
+      # Database connection (optional - uses SQLite by default)
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/doi2bibtex.db}
+      # Optional environment variables
+      - DOI2BIBTEX_LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DOI2BIBTEX_PLUGINS=${ENABLE_PLUGINS:-false}
+    volumes:
+      # Persist database and cache
+      - ./data:/app/data
+      - ./cache:/app/.cache
+    restart: unless-stopped
+    networks:
+      - doi2bibtex
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================================================
+  # Web UI Service (Streamlit)
+  # ============================================================================
+  web:
+    build:
+      context: .
+      target: web
+    image: doi2bibtex:web
+    container_name: doi2bibtex-web
+    ports:
+      - "8501:8501"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/doi2bibtex.db}
+      - DOI2BIBTEX_LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+      - ./cache:/app/.cache
+    restart: unless-stopped
+    networks:
+      - doi2bibtex
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================================================
+  # PostgreSQL Database (Optional)
+  # ============================================================================
+  # Uncomment to use PostgreSQL instead of SQLite
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: doi2bibtex-postgres
+  #   environment:
+  #     - POSTGRES_USER=doi2bibtex
+  #     - POSTGRES_PASSWORD=doi2bibtex_password
+  #     - POSTGRES_DB=doi2bibtex
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - doi2bibtex
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U doi2bibtex"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # ============================================================================
+  # Redis Cache (Optional)
+  # ============================================================================
+  # Uncomment to use Redis for distributed caching
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: doi2bibtex-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - doi2bibtex
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  doi2bibtex:
+    driver: bridge
+    name: doi2bibtex-network
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  # Persistent data storage
+  data:
+    driver: local
+  # PostgreSQL data (uncomment if using postgres)
+  # postgres_data:
+  #   driver: local
+  # Redis data (uncomment if using redis)
+  # redis_data:
+  #   driver: local

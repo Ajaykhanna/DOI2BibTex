@@ -253,6 +253,12 @@ def render_conversion_tab() -> None:
     config = get_config()
     state = get_state()
 
+    # Clear file uploader if flagged (before widget is created)
+    if st.session_state.get("clear_file_uploader", False):
+        if "doi_file_uploader" in st.session_state:
+            del st.session_state.doi_file_uploader
+        st.session_state.clear_file_uploader = False
+
     col1, col2 = st.columns(2)
 
     with col1:
@@ -268,6 +274,7 @@ def render_conversion_tab() -> None:
             "or upload .txt / .csv with DOIs",
             type=["txt", "csv"],
             help="Upload a text or CSV file containing DOIs",
+            key="doi_file_uploader",
         )
 
     if st.button("Convert", type="primary"):
@@ -306,6 +313,9 @@ def render_conversion_tab() -> None:
             new_state = state_manager.add_entries(result.entries)
             state_manager.update_analytics(result.analytics)
 
+            # Flag to clear file uploader on next run (prevents memory errors)
+            st.session_state.clear_file_uploader = True
+
             # Display results
             display_batch_results(
                 result.successful_count, result.failed_count, result.failed_dois
@@ -329,6 +339,12 @@ def render_results_section() -> None:
     """Render the results section with entries and downloads."""
     state = get_state()
 
+    # Clear citation keys editor if flagged (before widget is created)
+    if st.session_state.get("clear_citation_keys_editor", False):
+        if "citation_keys_editor" in st.session_state:
+            del st.session_state.citation_keys_editor
+        st.session_state.clear_citation_keys_editor = False
+
     st.markdown("### Results")
 
     if not state.has_entries:
@@ -350,6 +366,7 @@ def render_results_section() -> None:
         keys_text,
         height=80,
         help="Edit citation keys (comma or newline separated). Keep the same count.",
+        key="citation_keys_editor",
     )
 
     col_apply, col_copy, _ = st.columns([1, 1, 6], gap="small")
@@ -369,6 +386,10 @@ def render_results_section() -> None:
                 # Update keys in state
                 key_mapping = {old: new for old, new in zip(keys, new_keys)}
                 StateManager.update_entry_keys(key_mapping)
+
+                # Flag to clear citation keys editor on next run (shows updated keys)
+                st.session_state.clear_citation_keys_editor = True
+
                 st.success("Updated all keys.")
                 st.rerun()
 
