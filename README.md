@@ -15,40 +15,42 @@
 
 ---
 
+## 🚀 **Live Demo** [DOI2BibTex (Streamlit Cloud)](https://doi2bibtex.streamlit.app/)
+
 ## 🎯 **Version 3.0 - Production Hardening Release**
 
 **V3** represents the **production hardening and reliability milestone**, building upon V2's enterprise architecture with critical stability improvements:
 
 ### **🆕 What's New in V3**
 
-- 🔒 **Production-Grade Reliability** - Eliminates recurring MediaFileStorageError
-- 🔄 **Dynamic Widget Keys** - Robust session state management with automatic cleanup
-- 💾 **Enhanced Memory Management** - Zero memory leaks, efficient resource utilization
-- ⚡ **Improved State Lifecycle** - Streamlit-native widget handling for maximum stability
-- 🛡️ **Battle-Tested** - Comprehensive dependency analysis and production validation
-- 📊 **Zero Breaking Changes** - Seamless upgrade from V2 with backward compatibility
+* 🔒 **Production-Grade Reliability** - Eliminates recurring MediaFileStorageError
+* 🔄 **Dynamic Widget Keys** - Robust session state management with automatic cleanup
+* 💾 **Enhanced Memory Management** - Zero memory leaks, efficient resource utilization
+* ⚡ **Improved State Lifecycle** - Streamlit-native widget handling for maximum stability
+* 🛡️ **Battle-Tested** - Comprehensive dependency analysis and production validation
+* 📊 **Zero Breaking Changes** - Seamless upgrade from V2 with backward compatibility
 
 ---
 
 ## 📖 **Table of Contents**
 
-- [Overview](#overview)
-- [Version Comparison](#version-comparison)
-- [Key Features](#key-features)
-- [Architecture](#architecture)
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Usage Guide](#usage-guide)
-- [API Documentation](#api-documentation)
-- [CLI Usage](#cli-usage)
-- [Database Implementation](#database-implementation)
-- [Docker Deployment](#docker-deployment)
-- [Testing](#testing)
-- [Performance Benchmarks](#performance-benchmarks)
-- [Development](#development)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
+* [Overview](#overview)
+* [Version Comparison](#version-comparison)
+* [Key Features](#key-features)
+* [Architecture](#architecture)
+* [Quick Start](#quick-start)
+* [Installation](#installation)
+* [Usage Guide](#usage-guide)
+* [API Documentation](#api-documentation)
+* [CLI Usage](#cli-usage)
+* [Database Implementation](#database-implementation)
+* [Docker Deployment](#docker-deployment)
+* [Testing](#testing)
+* [Performance Benchmarks](#performance-benchmarks)
+* [Development](#development)
+* [Contributing](#contributing)
+* [License](#license)
+* [Acknowledgments](#acknowledgments)
 
 ---
 
@@ -58,11 +60,11 @@ DOI2BibTeX V3 is a production-ready, enterprise-grade tool for converting Digita
 
 ### **🎯 Design Goals**
 
-- **Reliability First**: Zero-error production deployments with comprehensive error handling
-- **Performance**: 5-10x faster than sequential processing with intelligent caching
-- **Developer Experience**: Type-safe, well-documented, easy to extend
-- **User Experience**: Intuitive UI, clear error messages, real-time progress tracking
-- **Production Ready**: Docker deployment, comprehensive tests, monitoring hooks
+* **Reliability First**: Zero-error production deployments with comprehensive error handling
+* **Performance**: 5-10x faster than sequential processing with intelligent caching
+* **Developer Experience**: Type-safe, well-documented, easy to extend
+* **User Experience**: Intuitive UI, clear error messages, real-time progress tracking
+* **Production Ready**: Docker deployment, comprehensive tests, monitoring hooks
 
 ---
 
@@ -106,41 +108,51 @@ DOI2BibTeX V3 is a production-ready, enterprise-grade tool for converting Digita
 ### **Core Functionality**
 
 #### **Batch Processing**
-- 🔄 **Single or Bulk**: Process one DOI or thousands in a single batch
-- 📁 **File Upload**: Support for `.txt` and `.csv` files with intelligent parsing
-- 🛡️ **Multi-Source Fetching**: Automatic fallback across Crossref → DataCite → DOI.org
-- ⚡ **Async Processing**: Concurrent requests with configurable batch sizes
-- 💾 **Smart Caching**: 2-tier cache (Memory L1 + File L2) reduces API calls by 90%
-- ✅ **Advanced Validation**: Smart DOI cleaning, format validation, duplicate detection
+
+* 🔄 **Single or Bulk**: Process one DOI or thousands in a single batch
+
+* 📁 **File Upload**: Support for `.txt` and `.csv` files with intelligent parsing
+* 🛡️ **Multi-Source Fetching**: Automatic fallback across Crossref → DataCite → DOI.org
+* ⚡ **Async Processing**: Concurrent requests with configurable batch sizes
+* 💾 **Smart Caching**: 2-tier cache (Memory L1 + File L2) reduces API calls by 90%
+* ✅ **Advanced Validation**: Smart DOI cleaning, format validation, duplicate detection
 
 #### **Citation Management**
-- 🔑 **Smart Citation Keys**: Multiple generation patterns (author_year, first_author_title_year, journal_year)
-- 🎯 **Auto-Disambiguation**: Prevents duplicate keys (smith2020 → smith2020a, smith2020b)
-- 📝 **Bulk Key Editing**: Edit all citation keys in unified interface
-- 📋 **One-Click Copy**: Copy all generated keys to clipboard
-- 🎨 **Style Previews**: Real-time APA, MLA, and Chicago formatting
-- 📖 **Journal Options**: Toggle between full titles and abbreviations
-- 📊 **Enhanced Metadata**: Automatic ISSN, URL, month, page numbers extraction
+
+* 🔑 **Smart Citation Keys**: Multiple generation patterns (author_year, first_author_title_year, journal_year)
+
+* 🎯 **Auto-Disambiguation**: Prevents duplicate keys (smith2020 → smith2020a, smith2020b)
+* 📝 **Bulk Key Editing**: Edit all citation keys in unified interface
+* 📋 **One-Click Copy**: Copy all generated keys to clipboard
+* 🎨 **Style Previews**: Real-time APA, MLA, and Chicago formatting
+* 📖 **Journal Options**: Toggle between full titles and abbreviations
+* 📊 **Enhanced Metadata**: Automatic ISSN, URL, month, page numbers extraction
 
 #### **Export Formats**
-- 📄 **BibTeX (.bib)**: LaTeX/academic standard format
-- 📑 **RIS (.ris)**: Reference manager import format
-- 📚 **EndNote (.enw)**: EndNote library format
-- 📝 **Abstract Support**: Optional inclusion across all formats
+
+* 📄 **BibTeX (.bib)**: LaTeX/academic standard format
+
+* 📑 **RIS (.ris)**: Reference manager import format
+* 📚 **EndNote (.enw)**: EndNote library format
+* 📝 **Abstract Support**: Optional inclusion across all formats
 
 #### **Analytics & Insights**
-- 📊 **Interactive Charts**: Publication timelines, top authors, journal distributions
-- 📈 **Success Metrics**: Processing statistics, quality scores, coverage analysis
-- 🎯 **Coverage Analysis**: DOI coverage and metadata completeness reports
-- 🔍 **Duplicate Detection**: Automatic identification and removal
+
+* 📊 **Interactive Charts**: Publication timelines, top authors, journal distributions
+
+* 📈 **Success Metrics**: Processing statistics, quality scores, coverage analysis
+* 🎯 **Coverage Analysis**: DOI coverage and metadata completeness reports
+* 🔍 **Duplicate Detection**: Automatic identification and removal
 
 #### **User Experience**
-- 🎨 **Modern Themes**: Light, Gray, and Dark modes
-- 📱 **Responsive Design**: Works seamlessly on all screen sizes
-- ⚡ **Real-time Progress**: Live updates during batch processing
-- 🔧 **Advanced Settings**: Fine-tune processing parameters
-- 🔒 **Session Persistence**: Maintains state across reruns (V3 improvement)
-- 💡 **Contextual Help**: Inline tooltips and comprehensive documentation
+
+* 🎨 **Modern Themes**: Light, Gray, and Dark modes
+
+* 📱 **Responsive Design**: Works seamlessly on all screen sizes
+* ⚡ **Real-time Progress**: Live updates during batch processing
+* 🔧 **Advanced Settings**: Fine-tune processing parameters
+* 🔒 **Session Persistence**: Maintains state across reruns (V3 improvement)
+* 💡 **Contextual Help**: Inline tooltips and comprehensive documentation
 
 ---
 
@@ -354,15 +366,16 @@ pip install -e ".[all]"
 
 ### **System Requirements**
 
-- **Python**: 3.8 or higher
-- **OS**: Linux, macOS, Windows
-- **Memory**: 512MB minimum, 2GB recommended
-- **Disk**: 100MB for application, 1GB for cache
-- **Network**: Internet connection for DOI resolution
+* **Python**: 3.8 or higher
+* **OS**: Linux, macOS, Windows
+* **Memory**: 512MB minimum, 2GB recommended
+* **Disk**: 100MB for application, 1GB for cache
+* **Network**: Internet connection for DOI resolution
 
 ### **Dependencies**
 
 #### **Core Dependencies**
+
 ```
 streamlit >= 1.28.0        # Web UI framework
 requests >= 2.31.0         # HTTP client
@@ -370,6 +383,7 @@ typing-extensions >= 4.5.0 # Type hints (Python 3.8-3.9)
 ```
 
 #### **Optional Dependencies**
+
 ```
 aiohttp >= 3.8.0          # Async HTTP (5-10x speed boost)
 sqlalchemy >= 2.0.0       # Database ORM
@@ -381,6 +395,7 @@ pandas >= 2.0.0           # Analytics
 ```
 
 #### **Development Dependencies**
+
 ```
 pytest >= 7.4.0           # Testing framework
 pytest-cov >= 4.1.0       # Coverage reports
@@ -416,6 +431,7 @@ python -c "import aiohttp; print('✓ Async support OK')" 2>/dev/null || echo "�
 #### **1. Input DOIs**
 
 **Manual Entry:**
+
 ```
 10.1038/nature12373
 10.1126/science.1234567
@@ -423,6 +439,7 @@ https://doi.org/10.1145/3292500.3330701
 ```
 
 **File Upload (dois.txt):**
+
 ```text
 # Comments start with #
 10.1038/nature12373
@@ -438,22 +455,25 @@ https://doi.org/10.1145/3292500.3330701
 #### **2. Configure Settings**
 
 **Sidebar Settings:**
-- **Theme**: Light / Gray / Dark
-- **Batch Size**: 1-500 (recommended: 50)
-- **Progress Animation**: Show/hide progress
+
+* **Theme**: Light / Gray / Dark
+* **Batch Size**: 1-500 (recommended: 50)
+* **Progress Animation**: Show/hide progress
 
 **Advanced Tab:**
-- **Citation Key Pattern**: author_year, first_author_title_year, journal_year
-- **Journal Abbreviations**: Use abbreviated journal names
-- **Validation**: Enable/disable DOI format checking
-- **Abstracts**: Fetch and include abstracts
-- **Duplicates**: Automatic removal
-- **Author Normalization**: Clean whitespace
+
+* **Citation Key Pattern**: author_year, first_author_title_year, journal_year
+* **Journal Abbreviations**: Use abbreviated journal names
+* **Validation**: Enable/disable DOI format checking
+* **Abstracts**: Fetch and include abstracts
+* **Duplicates**: Automatic removal
+* **Author Normalization**: Clean whitespace
 
 **Performance Tab:**
-- **Timeout**: 5-60 seconds
-- **Max Retries**: 1-10 attempts
-- **Concurrency**: 1-10 parallel requests
+
+* **Timeout**: 5-60 seconds
+* **Max Retries**: 1-10 attempts
+* **Concurrency**: 1-10 parallel requests
 
 #### **3. Process & Review**
 
@@ -465,21 +485,23 @@ https://doi.org/10.1145/3292500.3330701
 
 #### **4. Export Results**
 
-- **BibTeX (.bib)**: For LaTeX documents
-- **RIS (.ris)**: For reference managers (Zotero, Mendeley)
-- **EndNote (.enw)**: For EndNote library
+* **BibTeX (.bib)**: For LaTeX documents
+* **RIS (.ris)**: For reference managers (Zotero, Mendeley)
+* **EndNote (.enw)**: For EndNote library
 
 #### **5. Analyze Data**
 
 Navigate to **Analytics** tab:
-- Publication timeline charts
-- Top authors distribution
-- Journal frequency analysis
-- Metadata completeness reports
+
+* Publication timeline charts
+* Top authors distribution
+* Journal frequency analysis
+* Metadata completeness reports
 
 ### **V3 Enhanced Features**
 
 #### **Robust File Upload (V3 Improvement)**
+
 ```
 ✅ Upload file → Process → Change theme → No errors
 ✅ Upload file → Process → Edit keys → No errors
@@ -488,10 +510,12 @@ Navigate to **Analytics** tab:
 ```
 
 #### **Session State Management**
-- **Dynamic Widget Keys**: Automatic lifecycle management
-- **Zero Memory Leaks**: Streamlit media files auto-cleaned
-- **State Persistence**: Maintains data across all reruns
-- **Error Recovery**: Graceful handling of all scenarios
+
+* **Dynamic Widget Keys**: Automatic lifecycle management
+
+* **Zero Memory Leaks**: Streamlit media files auto-cleaned
+* **State Persistence**: Maintains data across all reruns
+* **Error Recovery**: Graceful handling of all scenarios
 
 ---
 
@@ -515,13 +539,16 @@ docker-compose up -d api
 ```
 
 #### **API Base URL**
+
 ```
 http://localhost:8000
 ```
 
 #### **Interactive Documentation**
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+
+* **Swagger UI**: <http://localhost:8000/docs>
+
+* **ReDoc**: <http://localhost:8000/redoc>
 
 ### **API Endpoints**
 
@@ -532,11 +559,13 @@ GET /api/v1/doi/{doi}
 ```
 
 **Example:**
+
 ```bash
 curl "http://localhost:8000/api/v1/doi/10.1038/nature12373"
 ```
 
 **Response:**
+
 ```json
 {
   "doi": "10.1038/nature12373",
@@ -561,6 +590,7 @@ Content-Type: application/json
 ```
 
 **Request Body:**
+
 ```json
 {
   "dois": [
@@ -575,6 +605,7 @@ Content-Type: application/json
 ```
 
 **Example:**
+
 ```bash
 curl -X POST "http://localhost:8000/api/v1/convert" \
   -H "Content-Type: application/json" \
@@ -586,6 +617,7 @@ curl -X POST "http://localhost:8000/api/v1/convert" \
 ```
 
 **Response:**
+
 ```json
 {
   "total": 2,
@@ -615,6 +647,7 @@ GET /health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -630,6 +663,7 @@ GET /api/v1/formats
 ```
 
 **Response:**
+
 ```json
 {
   "formats": ["bibtex", "ris", "endnote"],
@@ -644,6 +678,7 @@ GET /api/v1/sources
 ```
 
 **Response:**
+
 ```json
 {
   "sources": [
@@ -657,6 +692,7 @@ GET /api/v1/sources
 ### **API Error Handling**
 
 #### **Error Response Format**
+
 ```json
 {
   "error": "DOINotFoundError",
@@ -675,13 +711,15 @@ GET /api/v1/sources
 ```
 
 #### **HTTP Status Codes**
-- `200`: Success
-- `400`: Bad Request (invalid DOI format)
-- `404`: Not Found (DOI doesn't exist)
-- `422`: Unprocessable Entity (validation error)
-- `429`: Too Many Requests (rate limit exceeded)
-- `500`: Internal Server Error
-- `503`: Service Unavailable (external API down)
+
+* `200`: Success
+
+* `400`: Bad Request (invalid DOI format)
+* `404`: Not Found (DOI doesn't exist)
+* `422`: Unprocessable Entity (validation error)
+* `429`: Too Many Requests (rate limit exceeded)
+* `500`: Internal Server Error
+* `503`: Service Unavailable (external API down)
 
 ### **Python API Client Example**
 
@@ -802,6 +840,7 @@ doi2bibtex --version
 ### **CLI Options**
 
 #### **Global Options**
+
 ```
 --help          Show help message
 --version       Show version number
@@ -809,6 +848,7 @@ doi2bibtex --version
 ```
 
 #### **Convert Command Options**
+
 ```
 -o, --output FILE       Output file path
 -f, --format FORMAT     Output format (bibtex|ris|endnote)
@@ -817,6 +857,7 @@ doi2bibtex --version
 ```
 
 #### **Batch Command Options**
+
 ```
 -o, --output FILE       Output file path
 --async                Use async processing
@@ -829,6 +870,7 @@ doi2bibtex --version
 ### **Batch File Format**
 
 **dois.txt:**
+
 ```text
 # Comments start with #
 10.1038/nature12373
@@ -895,12 +937,15 @@ done
 The database layer provides persistent storage for DOI metadata, enabling offline access and reducing API calls.
 
 #### **Supported Databases**
-- **SQLite**: Default, file-based, zero configuration
-- **PostgreSQL**: Production, scalable, concurrent access
+
+* **SQLite**: Default, file-based, zero configuration
+
+* **PostgreSQL**: Production, scalable, concurrent access
 
 ### **Database Setup**
 
 #### **SQLite (Default)**
+
 ```python
 from core.database import DOIDatabase
 
@@ -909,6 +954,7 @@ db = DOIDatabase("doi2bibtex.db")
 ```
 
 #### **PostgreSQL (Production)**
+
 ```python
 from core.database import DOIDatabase
 
@@ -1111,9 +1157,9 @@ docker-compose down
 
 ### **Service URLs**
 
-- **Web UI**: http://localhost:8501
-- **REST API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+* **Web UI**: <http://localhost:8501>
+* **REST API**: <http://localhost:8000>
+* **API Docs**: <http://localhost:8000/docs>
 
 ### **Docker Compose Configuration**
 
@@ -1165,16 +1211,19 @@ volumes:
 ### **Individual Services**
 
 #### **Web UI Only**
+
 ```bash
 docker-compose up -d web
 ```
 
 #### **API Only**
+
 ```bash
 docker-compose up -d api
 ```
 
 #### **Database Only**
+
 ```bash
 docker-compose up -d database
 ```
@@ -1310,6 +1359,7 @@ pytest tests/ -x
 ### **Test Categories**
 
 #### **Unit Tests**
+
 ```bash
 # Test markers
 pytest tests/ -m "unit"
@@ -1323,6 +1373,7 @@ pytest tests/test_export.py
 ```
 
 #### **Integration Tests**
+
 ```bash
 pytest tests/ -m "integration"
 
@@ -1337,6 +1388,7 @@ pytest tests/test_cli.py
 ```
 
 #### **Performance Tests**
+
 ```bash
 pytest tests/test_performance.py -v
 
@@ -1572,22 +1624,25 @@ We welcome contributions! Here's how to get started:
 ### **Contribution Workflow**
 
 1. **Fork & Clone**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/DOI2BibTex.git
    cd DOI2BibTex
    ```
 
 2. **Create Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 3. **Make Changes**
-   - Write code following style guidelines
-   - Add tests for new features
-   - Update documentation
+   * Write code following style guidelines
+   * Add tests for new features
+   * Update documentation
 
 4. **Test Changes**
+
    ```bash
    # Run tests
    pytest tests/
@@ -1597,6 +1652,7 @@ We welcome contributions! Here's how to get started:
    ```
 
 5. **Commit & Push**
+
    ```bash
    git add .
    git commit -m "feat: Add your feature description"
@@ -1604,34 +1660,42 @@ We welcome contributions! Here's how to get started:
    ```
 
 6. **Create Pull Request**
-   - Go to GitHub repository
-   - Click "New Pull Request"
-   - Describe your changes
-   - Link related issues
+   * Go to GitHub repository
+   * Click "New Pull Request"
+   * Describe your changes
+   * Link related issues
 
 ### **Contribution Guidelines**
 
 #### **Code Style**
-- Follow PEP 8 style guide
-- Use type hints for all functions
-- Write docstrings (Google style)
-- Keep functions under 50 lines
-- Maximum line length: 88 characters
+
+* Follow PEP 8 style guide
+
+* Use type hints for all functions
+* Write docstrings (Google style)
+* Keep functions under 50 lines
+* Maximum line length: 88 characters
 
 #### **Testing**
-- Write unit tests for new features
-- Maintain 90%+ code coverage
-- Test edge cases and error conditions
-- Include integration tests for major features
+
+* Write unit tests for new features
+
+* Maintain 90%+ code coverage
+* Test edge cases and error conditions
+* Include integration tests for major features
 
 #### **Documentation**
-- Update README.md for user-facing changes
-- Add docstrings to all public functions
-- Include usage examples
-- Update UPGRADE_PLAN.md for architecture changes
+
+* Update README.md for user-facing changes
+
+* Add docstrings to all public functions
+* Include usage examples
+* Update UPGRADE_PLAN.md for architecture changes
 
 #### **Commit Messages**
+
 Follow conventional commits:
+
 ```
 feat: Add new feature
 fix: Fix bug
@@ -1644,13 +1708,13 @@ chore: Maintenance tasks
 
 ### **Areas for Contribution**
 
-- 🐛 **Bug Fixes**: Fix reported issues
-- ✨ **New Features**: Implement from roadmap
-- 📝 **Documentation**: Improve docs and examples
-- 🧪 **Tests**: Increase test coverage
-- 🎨 **UI/UX**: Enhance user interface
-- ⚡ **Performance**: Optimize bottlenecks
-- 🌐 **Internationalization**: Add language support
+* 🐛 **Bug Fixes**: Fix reported issues
+* ✨ **New Features**: Implement from roadmap
+* 📝 **Documentation**: Improve docs and examples
+* 🧪 **Tests**: Increase test coverage
+* 🎨 **UI/UX**: Enhance user interface
+* ⚡ **Performance**: Optimize bottlenecks
+* 🌐 **Internationalization**: Add language support
 
 ### **Code Review Process**
 
@@ -1681,30 +1745,30 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### **Special Thanks**
 
-- **Dr. Tretiak's Lab @ LANL** - Research environment and support
-- **Open Source Community** - Invaluable tools and libraries
-- **Beta Testers** - Feedback and bug reports
-- **Oren** - [Copy-to-clipboard pattern](https://discuss.streamlit.io/t/new-component-st-copy-a-new-way-to-copy-anything/111713)
+* **Dr. Tretiak's Lab @ LANL** - Research environment and support
+* **Open Source Community** - Invaluable tools and libraries
+* **Beta Testers** - Feedback and bug reports
+* **Oren** - [Copy-to-clipboard pattern](https://discuss.streamlit.io/t/new-component-st-copy-a-new-way-to-copy-anything/111713)
 
 ### **Core Technologies**
 
-- **[Crossref](https://www.crossref.org/)** - DOI metadata API
-- **[DataCite](https://datacite.org/)** - Alternative DOI resolution
-- **[Streamlit](https://streamlit.io/)** - Web application framework
-- **[FastAPI](https://fastapi.tiangolo.com/)** - REST API framework
-- **[Click](https://click.palletsprojects.com/)** - CLI framework
-- **[aiohttp](https://aiohttp.readthedocs.io/)** - Async HTTP client
-- **[SQLAlchemy](https://www.sqlalchemy.org/)** - Database ORM
-- **[Python](https://www.python.org/)** - Programming language
+* **[Crossref](https://www.crossref.org/)** - DOI metadata API
+* **[DataCite](https://datacite.org/)** - Alternative DOI resolution
+* **[Streamlit](https://streamlit.io/)** - Web application framework
+* **[FastAPI](https://fastapi.tiangolo.com/)** - REST API framework
+* **[Click](https://click.palletsprojects.com/)** - CLI framework
+* **[aiohttp](https://aiohttp.readthedocs.io/)** - Async HTTP client
+* **[SQLAlchemy](https://www.sqlalchemy.org/)** - Database ORM
+* **[Python](https://www.python.org/)** - Programming language
 
 ### **Development Tools**
 
-- **[pytest](https://pytest.org/)** - Testing framework
-- **[black](https://black.readthedocs.io/)** - Code formatter
-- **[ruff](https://github.com/charliermarsh/ruff)** - Fast linter
-- **[mypy](http://mypy-lang.org/)** - Static type checker
-- **[Docker](https://www.docker.com/)** - Containerization
-- **[GitHub Actions](https://github.com/features/actions)** - CI/CD
+* **[pytest](https://pytest.org/)** - Testing framework
+* **[black](https://black.readthedocs.io/)** - Code formatter
+* **[ruff](https://github.com/charliermarsh/ruff)** - Fast linter
+* **[mypy](http://mypy-lang.org/)** - Static type checker
+* **[Docker](https://www.docker.com/)** - Containerization
+* **[GitHub Actions](https://github.com/features/actions)** - CI/CD
 
 ### **Academic & Research**
 
@@ -1716,62 +1780,70 @@ Special acknowledgment to the academic community for making research openly acce
 
 ### **Get Help**
 
-- **📧 Email**: [akhanna2@ucmerced.edu](mailto:akhanna2@ucmerced.edu)
-- **🐛 Issues**: [GitHub Issues](https://github.com/Ajaykhanna/DOI2BibTex/issues)
-- **💬 Discussions**: [GitHub Discussions](https://github.com/Ajaykhanna/DOI2BibTex/discussions)
-- **🐦 Twitter**: [@samdig](https://twitter.com/samdig)
-- **💼 LinkedIn**: [ajay-khanna](https://www.linkedin.com/in/ajay-khanna)
+* **📧 Email**: [akhanna2@ucmerced.edu](mailto:akhanna2@ucmerced.edu)
+* **🐛 Issues**: [GitHub Issues](https://github.com/Ajaykhanna/DOI2BibTex/issues)
+* **💬 Discussions**: [GitHub Discussions](https://github.com/Ajaykhanna/DOI2BibTex/discussions)
+* **🐦 Twitter**: [@samdig](https://twitter.com/samdig)
+* **💼 LinkedIn**: [ajay-khanna](https://www.linkedin.com/in/ajay-khanna)
 
 ### **Reporting Issues**
 
 When reporting bugs, please include:
-- Python version (`python --version`)
-- Operating system
-- Error message and stack trace
-- Steps to reproduce
-- Expected vs actual behavior
+
+* Python version (`python --version`)
+* Operating system
+* Error message and stack trace
+* Steps to reproduce
+* Expected vs actual behavior
 
 ### **Feature Requests**
 
 For feature requests, please describe:
-- Use case and motivation
-- Proposed solution
-- Alternative approaches considered
-- Impact on existing functionality
+
+* Use case and motivation
+* Proposed solution
+* Alternative approaches considered
+* Impact on existing functionality
 
 ---
 
 ## 🗺️ **Roadmap**
 
 ### **V3.x (Current - Maintenance)**
-- ✅ Production stability improvements
-- ✅ Dynamic widget key management
-- ✅ Zero memory leak guarantee
-- 🔄 Bug fixes and security updates
+
+* ✅ Production stability improvements
+
+* ✅ Dynamic widget key management
+* ✅ Zero memory leak guarantee
+* 🔄 Bug fixes and security updates
 
 ### **V4.0 (Future - Extensibility)**
-- 🔌 Plugin system for custom processors
-- 🧠 ML-based citation recommendations
-- 🔄 GraphQL API support
-- 🌍 Multi-language interface (i18n)
-- 📱 Mobile-responsive UI improvements
+
+* 🔌 Plugin system for custom processors
+
+* 🧠 ML-based citation recommendations
+* 🔄 GraphQL API support
+* 🌍 Multi-language interface (i18n)
+* 📱 Mobile-responsive UI improvements
 
 ### **V5.0 (Future - Cloud Native)**
-- ☁️ AWS/GCP deployment templates
-- 💾 Redis distributed caching
-- 📊 Real-time analytics dashboard
-- 🔐 OAuth2 authentication
-- 📈 Horizontal scaling support
+
+* ☁️ AWS/GCP deployment templates
+
+* 💾 Redis distributed caching
+* 📊 Real-time analytics dashboard
+* 🔐 OAuth2 authentication
+* 📈 Horizontal scaling support
 
 ---
 
 ## 📚 **Additional Resources**
 
-- **[Historical README (V1-V2)](readme_v1_to_v2.md)** - V1 and V2 documentation
-- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment
-- **[Upgrade Plan](UPGRADE_PLAN.md)** - Architecture and roadmap
-- **[Installation Guide](INSTALL.md)** - Detailed installation
-- **[Live Demo](https://doi2bibtex.streamlit.app/)** - Try it online
+* **[Historical README (V1-V2)](readme_v1_to_v2.md)** - V1 and V2 documentation
+* **[Deployment Guide](DEPLOYMENT.md)** - Production deployment
+* **[Upgrade Plan](UPGRADE_PLAN.md)** - Architecture and roadmap
+* **[Installation Guide](INSTALL.md)** - Detailed installation
+* **[Live Demo](https://doi2bibtex.streamlit.app/)** - Try it online
 
 ---
 
