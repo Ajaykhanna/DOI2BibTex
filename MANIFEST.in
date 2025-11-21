@@ -1,0 +1,56 @@
+# MANIFEST.in - Specifies additional files to include in the distribution package
+
+# Documentation files
+include README.md
+include readme_v1_to_v2.md
+include LICENSE
+include DEPLOYMENT.md
+include INSTALL.md
+include UPGRADE_PLAN.md
+include RELEASE_NOTES_V3.md
+include RELEASE_INSTRUCTIONS.md
+
+# Requirements files
+include requirements.txt
+include requirements-dev.txt
+include requirements-test.txt
+include requirements-performance.txt
+
+# Configuration files
+include pyproject.toml
+include docker-compose.yml
+include Dockerfile
+include .gitignore
+
+# Example files
+include example_dois.txt
+
+# Logo and assets
+include logo.png
+
+# Exclude unnecessary files
+exclude test_fixes.py
+exclude run_tests.py
+
+# Exclude development directories
+recursive-exclude tests *
+recursive-exclude old_v1 *
+recursive-exclude __pycache__ *
+recursive-exclude .git *
+recursive-exclude .devcontainer *
+recursive-exclude htmlcov *
+recursive-exclude .cache *
+recursive-exclude .pytest_cache *
+recursive-exclude .mypy_cache *
+recursive-exclude *.egg-info *
+
+# Include core package
+recursive-include core *.py
+
+# Exclude compiled Python files
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.pyd
+global-exclude .DS_Store
+global-exclude *.so
+global-exclude *.dylib
