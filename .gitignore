@@ -51,6 +51,7 @@ temp/
 .env
 .env.local
 .env.*.local
+.pypirc
 
 # Cache directories (Phase 3)
 .cache/
