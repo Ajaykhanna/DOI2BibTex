@@ -61,3 +61,6 @@ temp/
 *.sqlite3
 *.db-journal
 doi2bibtex.db*
+
+# PyPI
+.pypirc

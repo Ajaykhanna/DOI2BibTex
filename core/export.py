@@ -3,6 +3,50 @@ import re
 from typing import Dict, List
 
 
+def normalize_bibtex_values(bib: str) -> str:
+    """
+    Normalize all BibTeX field values to be wrapped in curly braces.
+    
+    Converts fields like:
+    - month = January  →  month = {January}
+    - month = {January}  →  month = {January} (unchanged)
+    - volume = 10  →  volume = {10}
+    
+    This ensures consistent formatting across all BibTeX entries regardless
+    of the original source format.
+    
+    Parameters:
+    - bib: A BibTeX entry string (may contain newlines)
+    
+    Returns:
+    - The BibTeX entry with all field values normalized to use curly braces
+    """
+    import re as _re
+    
+    # Match fields with values that are NOT already wrapped in braces
+    # Pattern: key = value (where value is not {..} and not "..") followed by comma or newline
+    def replace_unbraced_value(match):
+        prefix = match.group(1)  # "key = "
+        value = match.group(2)   # the unbraced value
+        suffix = match.group(3)  # comma or newline
+        
+        # Only wrap if not already wrapped and not empty
+        if value.strip() and not value.strip().startswith('{'):
+            return f'{prefix}{{{value.strip()}}}{suffix}'
+        return match.group(0)
+    
+    # Replace field = unbraced_value pattern with field = {value}
+    # This regex finds: word = (non-brace/non-quote value) followed by comma/newline
+    result = _re.sub(
+        r'(\s*[A-Za-z][A-Za-z0-9_-]*\s*=\s*)([^{\"\n,]+?)(\s*[,\n])',
+        replace_unbraced_value,
+        bib,
+        flags=_re.MULTILINE
+    )
+    
+    return result
+
+
 def safe_replace_key(bibtex: str, old: str, new: str) -> str:
     """
     Replace the entry key in a BibTeX header without touching the body.

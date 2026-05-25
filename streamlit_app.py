@@ -29,7 +29,6 @@ import time
 from typing import List, Dict, Any
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 # Import our refactored modules
 from core.config import get_config, update_config, DEFAULT_FIELD_ORDER
@@ -156,7 +155,7 @@ def render_copy_button(
       btn.addEventListener('click', doCopy);
     </script>
     """
-    components.html(html, height=height + 10)
+    st.html(html)
 
 
 def render_sidebar() -> None:

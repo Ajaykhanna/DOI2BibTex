@@ -27,7 +27,7 @@ from .exceptions import (
 from .http import get_with_retry, polite_headers, get_json_with_retry
 from .doi import clean_doi, is_valid_doi, extract_bibtex_fields
 from .keys import make_key, disambiguate
-from .export import order_bibtex_fields, safe_replace_key
+from .export import order_bibtex_fields, safe_replace_key, normalize_bibtex_values
 from .dedupe import find_duplicates
 from .analytics import summarize
 from .cache import CacheManager
@@ -268,6 +268,9 @@ class DOIProcessor:
 
         # Reorder fields
         bib_content = order_bibtex_fields(bib_content, self.config.field_order)
+        
+        # Normalize all field values to use curly braces
+        bib_content = normalize_bibtex_values(bib_content)
 
         # Verify final key in content matches entry.key
         import re as _re

@@ -46,8 +46,8 @@ def doi2bib(doi: str) -> Tuple[str, str]:
     cite_key = cite_key_match.group(1) if cite_key_match else "unknown"
 
     # Reformat BibTeX output to place each field on a new line, with title and author first
-    fields = re.findall(r"(\w+)\s*=\s*\{([^}]*)\}", bibtex)
-    fields_dict = dict(fields)
+    fields = re.findall(r"(\w+)\s*=\s*(?:\{([^}]*)\}|(\w+))", bibtex)
+    fields_dict = {k: (v1 if v1 else v2) for k, v1, v2 in fields}
 
     # Ordering fields with title and author immediately after the citekey
     ordered_keys = ["title", "author"]

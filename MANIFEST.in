@@ -2,12 +2,9 @@
 
 # Documentation files
 include README.md
-include readme_v1_to_v2.md
 include LICENSE
 include DEPLOYMENT.md
 include INSTALL.md
-include UPGRADE_PLAN.md
-include RELEASE_NOTES_V3.md
 include RELEASE_INSTRUCTIONS.md
 
 # Requirements files
@@ -31,6 +28,10 @@ include logo.png
 # Exclude unnecessary files
 exclude test_fixes.py
 exclude run_tests.py
+exclude readme_v1_to_v2.md
+exclude UPGRADE_PLAN.md
+exclude PYPI_PUBLISHING_GUIDE.md
+exclude PUBLICATION_SUMMARY.md
 
 # Exclude development directories
 recursive-exclude tests *

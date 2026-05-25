@@ -110,7 +110,8 @@ def extract_bibtex_fields(bibtex: str) -> Dict[str, str]:
       -> {"title": "A Study", "author": "Smith", "year": "2020",
           "entry_type": "article", "key": "smith2020"}
     """
-    fields = dict(re.findall(r"(\w+)\s*=\s*\{([^}]*)\}", bibtex or ""))
+    fields_raw = re.findall(r"(\w+)\s*=\s*(?:\{([^}]*)\}|(\w+))", bibtex or "")
+    fields = {k: (v1 if v1 else v2) for k, v1, v2 in fields_raw}
     # entry type and key
     mtype = re.search(r"@(\w+)\{", bibtex or "")
     mkey = re.search(r"@\w+\{([^,]+),", bibtex or "")
